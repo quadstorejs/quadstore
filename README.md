@@ -175,6 +175,12 @@ exceedingly high bundle sizes.
 [AbstractLevel interface][db1]. An incomplete list of available backends
 is available at [level/awesome#stores][db6].
 
+**Note that quadstore is only compatible with `abstract-level`'s API as of
+its `1.x` versions. Packages whose semver major version number tracks that
+of `abstract-level`, such as `classic-level` and `memory-level`, must be
+used up to their most recent `1.x` version. The switch to `abstract-level`
+version `2.x` is tracked in [#168][db11].**
+
 Our test suite focuses on the following backends:
 
 - [`classic-level`][db2] for persistent, on-disk storage using [LevelDB][db0]
@@ -201,6 +207,7 @@ Our test suite focuses on the following backends:
 [db8]: https://github.com/level
 [db9]: https://github.com/Level/browser-level
 [db10]: https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
+[db11]: https://github.com/quadstorejs/quadstore/issues/168
 
 ### Data model and return values
 
