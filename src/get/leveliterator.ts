@@ -1,6 +1,8 @@
 
 import type { AbstractIterator } from 'abstract-level';
 import { BufferedIterator } from 'asynciterator';
+import { isPromise } from 'asynciterator';
+import { LEVEL_2_ERROR } from '../utils/stuff.js';
 
 type MapFn<K, V, T> = (key: K, value: V) => T;
 type OnNextValue<K, V> = (err: Error | null | undefined, key: K | undefined, value: V | undefined) => any;
@@ -22,7 +24,9 @@ export class LevelIterator<K, V, T> extends BufferedIterator<T> {
   _read(qty: number, done: (err?: Error) => void) {
     const state: Partial<ReadState<K, V>> = { remaining: qty };
     state.next = this._onNextValue.bind(this, state as ReadState<K, V>, done);
-    this.level.next(state.next);
+    if (isPromise(this.level.next(state.next))) {
+      throw LEVEL_2_ERROR;
+    };
   }
 
   protected _onNextValue(

@@ -13,8 +13,9 @@ import type {
 } from '../types/index.js';
 import type { AbstractIteratorOptions } from 'abstract-level';
 
+import { isPromise } from 'asynciterator';
 import { ResultType, LevelQuery } from '../types/index.js';
-import { arrStartsWith } from '../utils/stuff.js';
+import { arrStartsWith, LEVEL_2_ERROR } from '../utils/stuff.js';
 import { emptyObject, separator } from '../utils/constants.js';
 import { LevelIterator } from './leveliterator.js';
 import {quadReader, twoStepsQuadWriter, writePattern} from '../serialization/index.js';
@@ -130,7 +131,7 @@ export const getApproximateSize = async (store: Quadstore, pattern: Pattern, opt
   const start = level.gte || level.gt;
   const end = level.lte || level.lt;
   return new Promise((resolve, reject) => {
-    (store.db as AbstractLevelWithApproxSize).approximateSize!(start, end, (err: Error|null, approximateSize: number) => {
+    if (isPromise((store.db as AbstractLevelWithApproxSize).approximateSize!(start, end, (err: Error|null, approximateSize: number) => {
       if (err) {
         reject(err);
         return;
@@ -139,6 +140,8 @@ export const getApproximateSize = async (store: Quadstore, pattern: Pattern, opt
         type: ResultType.APPROXIMATE_SIZE,
         approximateSize: Math.max(1, approximateSize),
       });
-    });
+    }))) {
+      throw LEVEL_2_ERROR;
+    };
   });
 };

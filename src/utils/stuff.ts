@@ -74,3 +74,16 @@ export const arrStartsWith = (arr: TermName[], prefix: TermName[]): boolean => {
 };
 
 export const RESOLVED = Promise.resolve();
+
+export const LEVEL_2_ERROR = new Error([
+  '',
+  'You appear to be using an implementation of abstract-level@2.x.',
+  'This version of quadstore is only compatible with implementations',
+  'of abstract-level@1.x.',
+  '',
+  'If you are using classic-level, memory-level or browser-level you',
+  'can change your dependencies to target the latest 1.x version.',
+  '',
+  'See https://github.com/quadstorejs/quadstore/issues/168',
+  '',
+].join('\n'));
