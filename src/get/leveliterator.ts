@@ -1,74 +1,68 @@
 
 import type { AbstractIterator } from 'abstract-level';
-import { BufferedIterator } from 'asynciterator';
-import { isPromise } from 'asynciterator';
-import { LEVEL_2_ERROR } from '../utils/stuff.js';
 
-type MapFn<K, V, T> = (key: K, value: V) => T;
-type OnNextValue<K, V> = (err: Error | null | undefined, key: K | undefined, value: V | undefined) => any;
-type ReadState<K, V> = { remaining: number, next: OnNextValue<K, V> };
+import { BufferedIterator } from 'asynciterator';
+import { NOOP } from '../utils/stuff.js';
+
+type MapFn<K, V, T> = (entry: [K, V]) => T;
+type ReadCallback = (err?: Error) => void;
 
 export class LevelIterator<K, V, T> extends BufferedIterator<T> {
 
-  level: AbstractIterator<any, K, V>;
-  mapFn: MapFn<K, V, T>;
-  private levelEnded: boolean;
+  #level: AbstractIterator<any, K, V>;
+  #mapFn: MapFn<K, V, T>;
+  #levelEnded: boolean;
+  #readCallback: ReadCallback;
 
   constructor(levelIterator: AbstractIterator<any, K, V>, mapper: MapFn<K, V, T>) {
     super({ maxBufferSize: 64 });
-    this.mapFn = mapper;
-    this.level = levelIterator;
-    this.levelEnded = false;
+    this.#mapFn = mapper;
+    this.#level = levelIterator;
+    this.#levelEnded = false;
+    this.#readCallback = NOOP;
   }
 
-  _read(qty: number, done: (err?: Error) => void) {
-    const state: Partial<ReadState<K, V>> = { remaining: qty };
-    state.next = this._onNextValue.bind(this, state as ReadState<K, V>, done);
-    if (isPromise(this.level.next(state.next))) {
-      throw LEVEL_2_ERROR;
-    };
+  _read(qty: number, done: ReadCallback) {
+    this.#readCallback = done;
+    this.#level.nextv(qty)
+      .then(this.#onNextValues)
+      .catch(this.#onNextError);
   }
 
-  protected _onNextValue(
-    state: ReadState<K, V>,
-    done: (err?: Error) => void,
-    err: Error | null | undefined,
-    key: K | undefined,
-    value: V | undefined,
-  ) {
-    if (err) {
-      done(err);
-      return;
-    }
-    if (key === undefined && value === undefined) {
+  #onNextValues = (entries: [K, V][]) => {
+    if (entries.length) {
+      for (let i = 0; i < entries.length; i += 1) {
+        this._push(this.#mapFn(entries[i]));
+      }
+    } else {
       this.close();
-      this.levelEnded = true;
-      done();
-      return;
+      this.#levelEnded = true;
     }
-    this._push(this.mapFn(key!, value!));
-    state.remaining -= 1;
-    if (state.remaining === 0) {
-      done();
-      return;
-    }
-    this.level.next(state.next);
-  };
+    this.#readCallback();
+    this.#readCallback = NOOP;
+  }
+
+  #onNextError = (err: Error) => {
+    this.#readCallback(err);
+    this.#readCallback = NOOP;
+  }
 
   /**
    * Ends the internal AbstractIterator instance.
    */
   protected _endLevel(cb: (err?: Error | null) => void) {
-    if (this.levelEnded) {
+    if (this.#levelEnded) {
       cb();
       return;
     }
-    this.level.close((err?: Error | null) => {
-      if (!err) {
-        this.levelEnded = true;
-      }
-      cb(err);
-    });
+    this.#level.close()
+      .then(() => {
+        this.#levelEnded = true;
+        cb();
+      })
+      .catch((err: Error) => {
+        cb(err);
+      });
   }
 
 

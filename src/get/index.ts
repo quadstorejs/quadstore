@@ -77,7 +77,7 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
 
   if (levelQueryFull !== null) {
     const { index, level, order } = levelQueryFull;
-    let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), (key: string) => {
+    let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), ([key]) => {
       return quadReader.read(key, index.prefix.length, index.terms, dataFactory, prefixes);
     });
     return { type: ResultType.QUADS, order, iterator, index: index.terms, resorted: false };
@@ -87,7 +87,7 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
 
   if (levelQueryNoOpts !== null) {
     const { index, level, order } = levelQueryNoOpts;
-    let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), (key: string) => {
+    let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), ([key]) => {
       return quadReader.read(key, index.prefix.length, index.terms, dataFactory, prefixes);
     });
     if (typeof opts.order !== 'undefined' && !arrStartsWith(opts.order, order)) {
