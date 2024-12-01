@@ -52,7 +52,6 @@
     "url": "https://github.com/quadstorejs/quadstore.git"
   },
   "devDependencies": {
-    "@nxtedition/rocksdb": "^12.2.0",
     "@types/chai": "^5.0.1",
     "@types/mocha": "^10.0.10",
     "@types/n3": "^1.21.1",
