@@ -1,19 +1,7 @@
 
-import { AsyncIterator } from 'asynciterator';
-import { RESOLVED } from '../utils/stuff.js';
-
-let sortedSetImportErr: Error;
-
-let SortedSet: any = class {
-  constructor() {
-    throw new Error(`Failed to require module js-sorted-set: ${sortedSetImportErr?.message}`);
-  }
-};
-
 // @ts-ignore
-import('js-sorted-set')
-  .then((_) => { SortedSet = _.default; })
-  .catch((err) => { sortedSetImportErr = err; });
+import SortedSet from 'js-sorted-set';
+import { AsyncIterator } from 'asynciterator';
 
 /**
  * Buffers all items emitted from `source` and sorts them according to
@@ -78,9 +66,7 @@ export class SortingIterator<In, Int, Out> extends AsyncIterator<Out> {
       return null;
     };
 
-    RESOLVED.then(startBuffering).catch((err) => {
-      RESOLVED.then(() => this.emit('error', err));
-    });
+    queueMicrotask(startBuffering);
 
   }
 
