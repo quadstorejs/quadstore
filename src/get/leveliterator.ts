@@ -50,7 +50,7 @@ export class LevelIterator<K, V, T> extends BufferedIterator<T> {
   /**
    * Ends the internal AbstractIterator instance.
    */
-  protected _endLevel(cb: (err?: Error | null) => void) {
+  #endLevel(cb: (err?: Error | null) => void) {
     if (this.#levelEnded) {
       cb();
       return;
@@ -71,7 +71,7 @@ export class LevelIterator<K, V, T> extends BufferedIterator<T> {
       return;
     }
     super._end(destroy);
-    this._endLevel((endErr) => {
+    this.#endLevel((endErr) => {
       if (endErr) {
         this.emit('error', endErr);
       }
@@ -83,7 +83,7 @@ export class LevelIterator<K, V, T> extends BufferedIterator<T> {
       cb();
       return;
     }
-    this._endLevel((endErr?: Error | null) => {
+    this.#endLevel((endErr?: Error | null) => {
       if (endErr) {
         cb(endErr);
         return;

@@ -1,6 +1,15 @@
 
 # CHANGELOG
 
+## 14.0.0
+
+- **[breaking]** updates to [abstract-level@2.x][14_1], drops support for the
+  [`@nxtedition/rocksdb`][14_2] backend   
+  (https://github.com/quadstorejs/quadstore/issues/168)
+
+[14_1]: https://github.com/Level/abstract-level/blob/main/UPGRADING.md#200
+[14_2]: https://www.npmjs.com/package/@nxtedition/rocksdb
+
 ## 13.0.0
 
 - **[breaking]** switches to using radix 36 rather than radix 10 to encode
