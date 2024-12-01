@@ -79,7 +79,7 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
     const { index, level, order } = levelQueryFull;
     let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), ([key]) => {
       return quadReader.read(key, index.prefix.length, index.terms, dataFactory, prefixes);
-    });
+    }, opts.maxBufferSize);
     return { type: ResultType.QUADS, order, iterator, index: index.terms, resorted: false };
   }
 
@@ -89,7 +89,7 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
     const { index, level, order } = levelQueryNoOpts;
     let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), ([key]) => {
       return quadReader.read(key, index.prefix.length, index.terms, dataFactory, prefixes);
-    });
+    }, opts.maxBufferSize);
     if (typeof opts.order !== 'undefined' && !arrStartsWith(opts.order, order)) {
       const digest = (item: Quad): SortableQuad => {
         (item as SortableQuad)[SORTING_KEY] = twoStepsQuadWriter.ingest(item, prefixes).write('', <TermName[]>opts.order) + separator;

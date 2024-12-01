@@ -14,8 +14,8 @@ export class LevelIterator<K, V, T> extends BufferedIterator<T> {
   #levelEnded: boolean;
   #readCallback: ReadCallback;
 
-  constructor(levelIterator: AbstractIterator<any, K, V>, mapper: MapFn<K, V, T>) {
-    super({ maxBufferSize: 64 });
+  constructor(levelIterator: AbstractIterator<any, K, V>, mapper: MapFn<K, V, T>, maxBufferSize: number = 128) {
+    super({ maxBufferSize });
     this.#mapFn = mapper;
     this.#level = levelIterator;
     this.#levelEnded = false;

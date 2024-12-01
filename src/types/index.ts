@@ -49,6 +49,7 @@ export interface GetOpts {
   limit?: number,
   order?: TermName[],
   reverse?: boolean,
+  maxBufferSize?: number;
 }
 
 export interface PutStreamOpts {
