@@ -130,7 +130,7 @@ We're also evaluating the following features for future developments:
 
 - uses [Semantic Versioning](https://semver.org), pre-releases are tagged
   accordingly;
-- requires Node.js >= 16.0.0.
+- requires Node.js >= 18.0.0.
 
 ## Usage
 
@@ -187,11 +187,6 @@ Our test suite focuses on the following backends:
 - [`memory-level`][db3] for volatile in-memory storage using red-black trees
 - ~~[`rocksdb`][db4] for persistent storage using [RocksDB][db5]~~
   - waiting for the `rocks-level` package to be published
-- [`@nxtedition/rocks-level`][db7] for persistent, on-disk storage using
-  [RocksDB][db5]
-  - this is an alternative backend for RocksDB that tends to be 5% - 15%
-    faster then `classic-level` but is maintained outside of the [Level][db8]
-    community and set of _official_ packages
 - [`browser-level`][db9] for browser-side persistent storage using
   [IndexedDB][db10]. For more information about browser-side usage, see the
   [Browser usage section](#browser-usage)
