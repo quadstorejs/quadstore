@@ -117,14 +117,7 @@ export class Quadstore implements Store {
   }
 
   async clear(): Promise<void> {
-    if (typeof this.db.clear === 'function') {
-      return new Promise((resolve, reject) => {
-        this.db.clear((err?: Error | null) => {
-          err ? reject(err) : resolve();
-        });
-      });
-    }
-    await this.delStream((await this.getStream({})).iterator, { batchSize: 20 });
+    await this.db.clear();
   }
 
   match(subject?: Quad_Subject, predicate?: Quad_Predicate, object?: Quad_Object, graph?: Quad_Graph, opts: GetOpts = emptyObject): Stream<Quad> {
