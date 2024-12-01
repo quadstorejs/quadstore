@@ -2,7 +2,7 @@
 import type {Quad, Term} from '@rdfjs/types';
 import { ArrayIterator } from 'asynciterator';
 import { streamToArray } from '../../dist/esm/utils/stuff.js';
-import { Scope } from '../../dist/esm/scope/index.js';
+import { Scope, ScopeLabelMapping } from '../../dist/esm/scope/index.js';
 import { LevelIterator } from '../../dist/esm/get/leveliterator.js';
 import { arrayToHaveLength, equalsQuadArray, toBeAnArray, toBeFalse, toStrictlyEqual, toBeTrue } from '../utils/expect.js';
 
@@ -138,11 +138,11 @@ export const runPutTests = () => {
       const levelOpts = Scope.getLevelIteratorOpts(true, true, scope.id);
       const entries = await streamToArray(new LevelIterator(
         store.db.iterator(levelOpts),
-        (key: string, value: string) => value,
+        ([key, value]) => JSON.parse(value as string) as ScopeLabelMapping,
       ));
       toBeAnArray(entries);
       arrayToHaveLength(entries, 1);
-      const { originalLabel, randomLabel } = JSON.parse(entries[0]);
+      const [originalLabel, randomLabel] = entries[0];
       toStrictlyEqual(originalLabel, 'bo');
     });
 

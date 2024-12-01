@@ -87,3 +87,5 @@ export const LEVEL_2_ERROR = new Error([
   'See https://github.com/quadstorejs/quadstore/issues/168',
   '',
 ].join('\n'));
+
+export const NOOP = () => {};

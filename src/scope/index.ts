@@ -8,6 +8,8 @@ import { consumeOneByOne } from '../utils/consumeonebyone.js';
 import { uid } from '../utils/uid.js';
 import { separator, boundary } from '../utils/constants.js';
 
+export type ScopeLabelMapping = [string, string];
+
 export class Scope {
 
   readonly id: string;
@@ -23,13 +25,12 @@ export class Scope {
     const levelOpts = Scope.getLevelIteratorOpts(false, true, scopeId);
     const iterator = new LevelIterator(
       store.db.iterator(levelOpts),
-      (key: string, value: string) => value,
+      ([key, value]) => JSON.parse(value) as ScopeLabelMapping,
     );
     const blankNodes: Map<string, BlankNode> = new Map();
     const { dataFactory: factory } = store;
-    await consumeOneByOne(iterator, (value: string) => {
-      const {originalLabel, randomLabel} = JSON.parse(value);
-      blankNodes.set(originalLabel, factory.blankNode(randomLabel));
+    await consumeOneByOne(iterator, (mapping) => {
+      blankNodes.set(mapping[0], factory.blankNode(mapping[1]));
     });
     return new Scope(factory, scopeId, blankNodes);
   }
@@ -39,7 +40,7 @@ export class Scope {
     const levelOpts = Scope.getLevelIteratorOpts(true, false, scopeId);
     const iterator = new LevelIterator(
       store.db.iterator(levelOpts),
-      (key, value) => key,
+      ([key, value]) => key,
     );
     await consumeOneByOne(iterator, (key: string) => {
       batch.del(key);
@@ -62,7 +63,7 @@ export class Scope {
   }
 
   static addMappingToLevelBatch(scopeId: string, batch: AbstractChainedBatch<any, any, any>, originalLabel: string, randomLabel: string) {
-    batch.put(`SCOPE${separator}${scopeId}${separator}${originalLabel}`, JSON.stringify({ originalLabel, randomLabel }));
+    batch.put(`SCOPE${separator}${scopeId}${separator}${originalLabel}`, JSON.stringify([originalLabel, randomLabel]));
   }
 
   constructor(factory: DataFactory, id: string, blankNodes: Map<string, BlankNode>) {

@@ -63,11 +63,11 @@ export const runScopeTests = () => {
       await store.deleteScope(scopeA.id);
       const entriesA = await streamToArray(new LevelIterator(
         store.db.iterator(Scope.getLevelIteratorOpts(true, true, scopeA.id)),
-        (key: string, value: string) => value,
+        ([key, value]) => value,
       ));
       const entriesB = await streamToArray(new LevelIterator(
         store.db.iterator(Scope.getLevelIteratorOpts(true, true, scopeB.id)),
-        (key: string, value: string) => value,
+        ([key, value]) => value,
       ));
       toBeAnArray(entriesA);
       toBeAnArray(entriesB);
@@ -94,7 +94,7 @@ export const runScopeTests = () => {
       await store.deleteAllScopes();
       const entries = await streamToArray(new LevelIterator(
         store.db.iterator(Scope.getLevelIteratorOpts(true, true)),
-        (key: string, value: string) => value,
+        ([key, value]) => value,
       ));
       toBeAnArray(entries);
       arrayToHaveLength(entries, 0);
