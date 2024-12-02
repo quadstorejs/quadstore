@@ -130,7 +130,7 @@ We're also evaluating the following features for future developments:
 
 - uses [Semantic Versioning](https://semver.org), pre-releases are tagged
   accordingly;
-- requires Node.js >= 16.0.0.
+- requires Node.js >= 18.0.0.
 
 ## Usage
 
@@ -172,26 +172,13 @@ exceedingly high bundle sizes.
 ### Storage backends
 
 `quadstore` can work with any storage backend that implements the 
-[AbstractLevel interface][db1]. An incomplete list of available backends
+[`AbstractLevel` interface][db1]. An incomplete list of available backends
 is available at [level/awesome#stores][db6].
-
-**Note that quadstore is only compatible with `abstract-level`'s API as of
-its `1.x` versions. Packages whose semver major version number tracks that
-of `abstract-level`, such as `classic-level` and `memory-level`, must be
-used up to their most recent `1.x` version. The switch to `abstract-level`
-version `2.x` is tracked in [#168][db11].**
 
 Our test suite focuses on the following backends:
 
 - [`classic-level`][db2] for persistent, on-disk storage using [LevelDB][db0]
 - [`memory-level`][db3] for volatile in-memory storage using red-black trees
-- ~~[`rocksdb`][db4] for persistent storage using [RocksDB][db5]~~
-  - waiting for the `rocks-level` package to be published
-- [`@nxtedition/rocks-level`][db7] for persistent, on-disk storage using
-  [RocksDB][db5]
-  - this is an alternative backend for RocksDB that tends to be 5% - 15%
-    faster then `classic-level` but is maintained outside of the [Level][db8]
-    community and set of _official_ packages
 - [`browser-level`][db9] for browser-side persistent storage using
   [IndexedDB][db10]. For more information about browser-side usage, see the
   [Browser usage section](#browser-usage)
@@ -202,7 +189,7 @@ Our test suite focuses on the following backends:
 [db3]: https://github.com/level/memory-level
 [db4]: https://github.com/level/rocksdb
 [db5]: https://rocksdb.org
-[db6]: https://github.com/level/awesome#stores
+[db6]: https://github.com/level/awesome#storage
 [db7]: https://github.com/nxtedition/rocks-level
 [db8]: https://github.com/level
 [db9]: https://github.com/Level/browser-level

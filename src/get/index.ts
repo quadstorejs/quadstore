@@ -15,7 +15,7 @@ import type { AbstractIteratorOptions } from 'abstract-level';
 
 import { isPromise } from 'asynciterator';
 import { ResultType, LevelQuery } from '../types/index.js';
-import { arrStartsWith, LEVEL_2_ERROR } from '../utils/stuff.js';
+import { arrStartsWith } from '../utils/stuff.js';
 import { emptyObject, separator } from '../utils/constants.js';
 import { LevelIterator } from './leveliterator.js';
 import {quadReader, twoStepsQuadWriter, writePattern} from '../serialization/index.js';
@@ -77,9 +77,9 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
 
   if (levelQueryFull !== null) {
     const { index, level, order } = levelQueryFull;
-    let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), (key: string) => {
+    let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), ([key]) => {
       return quadReader.read(key, index.prefix.length, index.terms, dataFactory, prefixes);
-    });
+    }, opts.maxBufferSize);
     return { type: ResultType.QUADS, order, iterator, index: index.terms, resorted: false };
   }
 
@@ -87,9 +87,9 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
 
   if (levelQueryNoOpts !== null) {
     const { index, level, order } = levelQueryNoOpts;
-    let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), (key: string) => {
+    let iterator: AsyncIterator<Quad> = new LevelIterator(store.db.iterator(level), ([key]) => {
       return quadReader.read(key, index.prefix.length, index.terms, dataFactory, prefixes);
-    });
+    }, opts.maxBufferSize);
     if (typeof opts.order !== 'undefined' && !arrStartsWith(opts.order, order)) {
       const digest = (item: Quad): SortableQuad => {
         (item as SortableQuad)[SORTING_KEY] = twoStepsQuadWriter.ingest(item, prefixes).write('', <TermName[]>opts.order) + separator;
@@ -115,7 +115,7 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
 };
 
 interface AbstractLevelWithApproxSize extends AbstractLevel<any,  any, any> {
-  approximateSize?: (start: string, end: string, cb: (err: Error | null, approximateSize: number) => any) => any;
+  approximateSize: (start: string, end: string) => Promise<number>;
 }
 
 export const getApproximateSize = async (store: Quadstore, pattern: Pattern, opts: GetOpts): Promise<ApproximateSizeResult> => {
@@ -130,18 +130,9 @@ export const getApproximateSize = async (store: Quadstore, pattern: Pattern, opt
   const { level } = levelQuery;
   const start = level.gte || level.gt;
   const end = level.lte || level.lt;
-  return new Promise((resolve, reject) => {
-    if (isPromise((store.db as AbstractLevelWithApproxSize).approximateSize!(start, end, (err: Error|null, approximateSize: number) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve({
-        type: ResultType.APPROXIMATE_SIZE,
-        approximateSize: Math.max(1, approximateSize),
-      });
-    }))) {
-      throw LEVEL_2_ERROR;
-    };
-  });
+  const approximateSize = await (store.db as AbstractLevelWithApproxSize).approximateSize(start, end);
+  return {
+    type: ResultType.APPROXIMATE_SIZE,
+    approximateSize: Math.max(1, approximateSize),
+  };
 };
