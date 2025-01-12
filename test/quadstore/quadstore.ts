@@ -1,6 +1,6 @@
 
-import type { Prefixes } from '../../dist/esm/types/index';
-import { Quadstore } from '../../dist/esm/quadstore.js';
+import type { Prefixes } from '../../dist/types/index';
+import { Quadstore } from '../../dist/quadstore.js';
 import { runSerializationTests } from './serialization.js';
 import { runPrewriteTests } from './prewrite.js';
 import { runGetTests } from './get.js';

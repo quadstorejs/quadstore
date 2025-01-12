@@ -2,7 +2,7 @@
 import type { Quad, Term } from '@rdfjs/types';
 
 import { expect } from 'chai';
-import { termNames } from '../../dist/esm/utils/constants.js';
+import { termNames } from '../../dist/utils/constants.js';
 
 export const toBeTrue = (value: any) => {
   expect(value).to.be.true;

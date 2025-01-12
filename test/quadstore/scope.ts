@@ -1,8 +1,8 @@
 
 
-import { streamToArray } from '../../dist/esm/utils/stuff.js';
-import { Scope } from '../../dist/esm/scope/index.js';
-import { LevelIterator } from '../../dist/esm/get/leveliterator.js';
+import { streamToArray } from '../../dist/utils/stuff.js';
+import { Scope } from '../../dist/scope/index.js';
+import { LevelIterator } from '../../dist/get/leveliterator.js';
 import { arrayToHaveLength, toNotEqualTerm, toBeAnArray, toBeInstanceOf } from '../utils/expect.js';
 
 export const runScopeTests = () => {

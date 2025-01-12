@@ -1,8 +1,8 @@
 
-import type {InternalIndex} from '../../dist/esm/types/index.js';
+import type {InternalIndex} from '../../dist/types/index.js';
 
-import * as xsd from '../../dist/esm/serialization/xsd.js';
-import {quadReader, twoStepsQuadWriter} from '../../dist/esm/serialization/index.js';
+import * as xsd from '../../dist/serialization/xsd.js';
+import {quadReader, twoStepsQuadWriter} from '../../dist/serialization/index.js';
 import { toEqualQuad } from '../utils/expect.js';
 
 export const runSerializationTests = () => {
