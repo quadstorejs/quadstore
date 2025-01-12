@@ -19,7 +19,10 @@ let exitCode = 0;
 
 httpServer.once('listening', () => {
   (async () => {
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ 
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
     page.on('console', async (evt) => {
       const [msg, ...args] = await Promise.all(evt.args().map(arg => arg.jsonValue()));
