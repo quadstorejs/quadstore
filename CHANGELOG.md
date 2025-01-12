@@ -1,6 +1,10 @@
 
 # CHANGELOG
 
+## 15.0.0
+
+- **[breaking]** drops CommonJS build, becoming an ESM-only package.
+
 ## 14.0.0
 
 - **[breaking]** updates to [abstract-level@2.x][14_1], drops support for the
