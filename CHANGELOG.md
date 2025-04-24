@@ -1,6 +1,12 @@
 
 # CHANGELOG
 
+## 15.1.0
+
+- *[internal]* updates to [abstract-level@3.x][15_1_0_1]
+
+[15_1_0_1]: https://github.com/Level/abstract-level/blob/main/CHANGELOG.md#310---2025-04-12
+
 ## 15.0.0
 
 - **[breaking]** drops CommonJS build, becoming an ESM-only package.
