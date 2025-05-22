@@ -20,7 +20,7 @@ import { emptyObject, separator } from '../utils/constants.js';
 import {quadReader, twoStepsQuadWriter, writePattern} from '../serialization/index.js';
 import { SortingIterator } from './sortingiterator.js';
 import { AbstractLevel } from 'abstract-level';
-import { wrapLevelIterator } from './utils.js';
+import { LevelIterator } from './leveliterator.js';
 
 const SORTING_KEY = Symbol();
 
@@ -77,10 +77,10 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
 
   if (levelQueryFull !== null) {
     const { index, level, order } = levelQueryFull;
-    let iterator: AsyncIterator<Quad> = wrapLevelIterator(
+    let iterator: AsyncIterator<Quad> = new LevelIterator(
       store.db.iterator(level), 
-      opts.maxBufferSize ?? 128, 
       ([key]) => quadReader.read(key, index.prefix.length, index.terms, dataFactory, prefixes),
+      opts.maxBufferSize, 
     );
     return { type: ResultType.QUADS, order, iterator, index: index.terms, resorted: false };
   }
@@ -89,10 +89,10 @@ export const getStream = async (store: Quadstore, pattern: Pattern, opts: GetOpt
 
   if (levelQueryNoOpts !== null) {
     const { index, level, order } = levelQueryNoOpts;
-    let iterator: AsyncIterator<Quad> = wrapLevelIterator(
-      store.db.iterator(level), 
-      opts.maxBufferSize ?? 128,
+    let iterator: AsyncIterator<Quad> = new LevelIterator(
+      store.db.iterator(level),
       ([key]) => quadReader.read(key, index.prefix.length, index.terms, dataFactory, prefixes),
+      opts.maxBufferSize,
     );
     if (typeof opts.order !== 'undefined' && !arrStartsWith(opts.order, order)) {
       const digest = (item: Quad): SortableQuad => {

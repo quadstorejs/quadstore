@@ -4,7 +4,7 @@ import { ArrayIterator } from 'asynciterator';
 import { streamToArray } from '../../dist/utils/stuff.js';
 import { Scope, ScopeLabelMapping } from '../../dist/scope/index.js';
 import { arrayToHaveLength, equalsQuadArray, toBeAnArray, toBeFalse, toStrictlyEqual, toBeTrue } from '../utils/expect.js';
-import { wrapLevelIterator } from '../../dist/get/utils.js';
+import { LevelIterator } from '../../dist/get/leveliterator.js';
 
 export const runPutTests = () => {
 
@@ -136,9 +136,8 @@ export const runPutTests = () => {
       );
       await store.put(quad, { scope });
       const levelOpts = Scope.getLevelIteratorOpts(true, true, scope.id);
-      const entries = await streamToArray(wrapLevelIterator(
+      const entries = await streamToArray(new LevelIterator(
         store.db.iterator(levelOpts),
-        128,
         ([key, value]) => JSON.parse(value as string) as ScopeLabelMapping,
       ));
       toBeAnArray(entries);

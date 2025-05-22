@@ -1,90 +1,89 @@
 
 import type { AbstractIterator } from 'abstract-level';
 
-import { BufferedIterator } from 'asynciterator';
-import { NOOP } from '../utils/stuff.js';
+import { AsyncIterator } from 'asynciterator';
 
-type ReadCallback = (err?: Error) => void;
+export type MappingFn<I, O> = (val: I) => O;
 
-export class LevelIterator<K, V> extends BufferedIterator<[K, V][]> {
+export class LevelIterator<K, V, T> extends AsyncIterator<T> {
 
-  #level: AbstractIterator<any, K, V>;
-  #levelEnded: boolean;
-  #readCallback: ReadCallback;
+  #source: AbstractIterator<any, K, V>;
+  #sourceEnded: boolean;
+  #mapper: MappingFn<[K, V], T>;
+  #bufsize: number;
+  #nextbuf: [K, V][] | null;
+  #currbuf: [K, V][] | null;
+  #curridx: number;
+  #loading: boolean;
 
-  constructor(levelIterator: AbstractIterator<any, K, V>, maxBufferSize: number) {
-    super({ maxBufferSize });
-    this.#level = levelIterator;
-    this.#levelEnded = false;
-    this.#readCallback = NOOP;
+  constructor(source: AbstractIterator<any, K, V>, mapper: MappingFn<[K, V], T>, maxBufferSize: number = 256) {
+    super();
+    this.#source = source;
+    this.#sourceEnded = false;
+    this.#mapper = mapper;
+    this.#bufsize = maxBufferSize;
+    this.#currbuf = null;
+    this.#nextbuf = null;
+    this.#curridx = 0;
+    this.#loading = false;
+    this.readable = false;
+    queueMicrotask(this.#loadNextBuffer);
+  }
+  
+  read(): T | null {
+    let item: T | null = null;
+    if (!this.#currbuf) {
+      this.#currbuf = this.#nextbuf;
+      this.#nextbuf = null;
+      this.#curridx = 0;
+      this.#loadNextBuffer();
+    }
+    if (this.#currbuf) {
+      if (this.#curridx < this.#currbuf.length) {
+        item = this.#mapper(this.#currbuf[this.#curridx++]);
+      }
+      if (this.#curridx === this.#currbuf.length) {
+        this.#currbuf = null;
+      }
+    } 
+    if (item === null) { 
+      this.readable = false;
+      if (this.#sourceEnded) { 
+        this.close();
+      }
+    } 
+    return item;
+  }
+  
+  #loadNextBuffer = () => {
+    if (!this.#loading && !this.#nextbuf) {
+      this.#loading = true;
+      this.#source.nextv(this.#bufsize)
+        .then(this.#onNextBuffer)
+        .catch(this.#onNextBufferError);
+    }
   }
 
-  _read(qty: number, done: ReadCallback) {
-    this.#readCallback = done;
-    this.#level.nextv(qty)
-      .then(this.#onNextValues)
-      .catch(this.#onNextError);
-  }
-
-  #onNextValues = (entries: [K, V][]) => {
+  #onNextBuffer = (entries: [K, V][]) => {
+    this.#loading = false;
     if (entries.length) {
-      this._push(entries);
+      this.readable = true;
+      this.#nextbuf = entries;
     } else {
+      this.#nextbuf = null;
+      this.#sourceEnded = true;
+      if (!this.#currbuf) { 
+        this.close();
+      }
+    }
+  }
+
+  #onNextBufferError = (err: Error) => {
+    this.#loading = false;
+    this.#sourceEnded = true;
+    if (!this.#currbuf) { 
       this.close();
-      this.#levelEnded = true;
     }
-    this.#readCallback();
-    this.#readCallback = NOOP;
-  }
-
-  #onNextError = (err: Error) => {
-    this.#readCallback(err);
-    this.#readCallback = NOOP;
-  }
-
-  /**
-   * Ends the internal AbstractIterator instance.
-   */
-  #endLevel(cb: (err?: Error | null) => void) {
-    if (this.#levelEnded) {
-      cb();
-      return;
-    }
-    this.#level.close()
-      .then(() => {
-        this.#levelEnded = true;
-        cb();
-      })
-      .catch((err: Error) => {
-        cb(err);
-      });
-  }
-
-
-  protected _end(destroy?: boolean) {
-    if (this.ended) {
-      return;
-    }
-    super._end(destroy);
-    this.#endLevel((endErr) => {
-      if (endErr) {
-        this.emit('error', endErr);
-      }
-    });
-  }
-
-  protected _destroy(cause: Error|undefined, cb: (err?: Error) => void) {
-    if (this.destroyed) {
-      cb();
-      return;
-    }
-    this.#endLevel((endErr?: Error | null) => {
-      if (endErr) {
-        cb(endErr);
-        return;
-      }
-      super._destroy(cause, cb);
-    });
   }
 
 }
