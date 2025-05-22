@@ -2,7 +2,7 @@
 
 import { streamToArray } from '../../dist/utils/stuff.js';
 import { Scope } from '../../dist/scope/index.js';
-import { LevelIterator } from '../../dist/get/leveliterator.js';
+import { wrapLevelIterator } from '../../dist/get/utils.js';
 import { arrayToHaveLength, toNotEqualTerm, toBeAnArray, toBeInstanceOf } from '../utils/expect.js';
 
 export const runScopeTests = () => {
@@ -61,12 +61,14 @@ export const runScopeTests = () => {
       await store.put(quad, { scope: scopeA });
       await store.put(quad, { scope: scopeB });
       await store.deleteScope(scopeA.id);
-      const entriesA = await streamToArray(new LevelIterator(
+      const entriesA = await streamToArray(wrapLevelIterator(
         store.db.iterator(Scope.getLevelIteratorOpts(true, true, scopeA.id)),
+        128,
         ([key, value]) => value,
       ));
-      const entriesB = await streamToArray(new LevelIterator(
+      const entriesB = await streamToArray(wrapLevelIterator(
         store.db.iterator(Scope.getLevelIteratorOpts(true, true, scopeB.id)),
+        128,
         ([key, value]) => value,
       ));
       toBeAnArray(entriesA);
@@ -92,8 +94,9 @@ export const runScopeTests = () => {
       await store.put(quad, { scope: scopeA });
       await store.put(quad, { scope: scopeB });
       await store.deleteAllScopes();
-      const entries = await streamToArray(new LevelIterator(
+      const entries = await streamToArray(wrapLevelIterator(
         store.db.iterator(Scope.getLevelIteratorOpts(true, true)),
+        128,
         ([key, value]) => value,
       ));
       toBeAnArray(entries);

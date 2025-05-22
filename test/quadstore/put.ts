@@ -3,8 +3,8 @@ import type {Quad, Term} from '@rdfjs/types';
 import { ArrayIterator } from 'asynciterator';
 import { streamToArray } from '../../dist/utils/stuff.js';
 import { Scope, ScopeLabelMapping } from '../../dist/scope/index.js';
-import { LevelIterator } from '../../dist/get/leveliterator.js';
 import { arrayToHaveLength, equalsQuadArray, toBeAnArray, toBeFalse, toStrictlyEqual, toBeTrue } from '../utils/expect.js';
+import { wrapLevelIterator } from '../../dist/get/utils.js';
 
 export const runPutTests = () => {
 
@@ -136,8 +136,9 @@ export const runPutTests = () => {
       );
       await store.put(quad, { scope });
       const levelOpts = Scope.getLevelIteratorOpts(true, true, scope.id);
-      const entries = await streamToArray(new LevelIterator(
+      const entries = await streamToArray(wrapLevelIterator(
         store.db.iterator(levelOpts),
+        128,
         ([key, value]) => JSON.parse(value as string) as ScopeLabelMapping,
       ));
       toBeAnArray(entries);

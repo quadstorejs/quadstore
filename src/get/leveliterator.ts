@@ -4,19 +4,16 @@ import type { AbstractIterator } from 'abstract-level';
 import { BufferedIterator } from 'asynciterator';
 import { NOOP } from '../utils/stuff.js';
 
-type MapFn<K, V, T> = (entry: [K, V]) => T;
 type ReadCallback = (err?: Error) => void;
 
-export class LevelIterator<K, V, T> extends BufferedIterator<T> {
+export class LevelIterator<K, V> extends BufferedIterator<[K, V][]> {
 
   #level: AbstractIterator<any, K, V>;
-  #mapFn: MapFn<K, V, T>;
   #levelEnded: boolean;
   #readCallback: ReadCallback;
 
-  constructor(levelIterator: AbstractIterator<any, K, V>, mapper: MapFn<K, V, T>, maxBufferSize: number = 128) {
+  constructor(levelIterator: AbstractIterator<any, K, V>, maxBufferSize: number) {
     super({ maxBufferSize });
-    this.#mapFn = mapper;
     this.#level = levelIterator;
     this.#levelEnded = false;
     this.#readCallback = NOOP;
@@ -31,9 +28,7 @@ export class LevelIterator<K, V, T> extends BufferedIterator<T> {
 
   #onNextValues = (entries: [K, V][]) => {
     if (entries.length) {
-      for (let i = 0; i < entries.length; i += 1) {
-        this._push(this.#mapFn(entries[i]));
-      }
+      this._push(entries);
     } else {
       this.close();
       this.#levelEnded = true;
