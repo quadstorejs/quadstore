@@ -3,8 +3,8 @@ import type {Quad, Term} from '@rdfjs/types';
 import { ArrayIterator } from 'asynciterator';
 import { streamToArray } from '../../dist/utils/stuff.js';
 import { Scope, ScopeLabelMapping } from '../../dist/scope/index.js';
-import { LevelIterator } from '../../dist/get/leveliterator.js';
 import { arrayToHaveLength, equalsQuadArray, toBeAnArray, toBeFalse, toStrictlyEqual, toBeTrue } from '../utils/expect.js';
+import { LevelIterator } from '../../dist/get/leveliterator.js';
 
 export const runPutTests = () => {
 

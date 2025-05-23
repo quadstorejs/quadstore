@@ -3,10 +3,10 @@ import type { DataFactory, Quad, BlankNode, Quad_Subject, Quad_Object, Quad_Grap
 import type { AbstractChainedBatch } from 'abstract-level';
 import type { Quadstore } from '../quadstore.js';
 
-import { LevelIterator } from '../get/leveliterator.js';
 import { consumeOneByOne } from '../utils/consumeonebyone.js';
 import { uid } from '../utils/uid.js';
 import { separator, boundary } from '../utils/constants.js';
+import { LevelIterator } from '../get/leveliterator.js';
 
 export type ScopeLabelMapping = [string, string];
 
@@ -24,7 +24,7 @@ export class Scope {
   static async load(store: Quadstore, scopeId: string): Promise<Scope> {
     const levelOpts = Scope.getLevelIteratorOpts(false, true, scopeId);
     const iterator = new LevelIterator(
-      store.db.iterator(levelOpts),
+      store.db.iterator(levelOpts), 
       ([key, value]) => JSON.parse(value) as ScopeLabelMapping,
     );
     const blankNodes: Map<string, BlankNode> = new Map();

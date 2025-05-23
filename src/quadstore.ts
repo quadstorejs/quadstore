@@ -171,7 +171,7 @@ export class Quadstore implements Store {
   }
 
   async getApproximateSize(pattern: Pattern, opts: GetOpts = emptyObject) {
-    await this.ensureReady();
+    this.ensureReady();
     return await getApproximateSize(this, pattern, opts);
   }
 
