@@ -1,6 +1,12 @@
 
 # CHANGELOG
 
+## 15.2.0
+
+- *[internal]* reduced duplication, looping and unnecessary allocations when
+  reading from `AbstractIterator`.   
+  (https://github.com/quadstorejs/quadstore/pull/175)
+
 ## 15.1.0
 
 - *[internal]* updates to [abstract-level@3.x][15_1_0_1]
