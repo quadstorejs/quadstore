@@ -44,6 +44,8 @@
  * +------+------------+-----------------------------------------+--------------------+------------+
  * | 6    | Infinity   |                                         |                    |            |
  * +------+------------+-----------------------------------------+--------------------+------------+
+ * | 7    | NaN        |                                         |                    |            |
+ * +------+------------+-----------------------------------------+--------------------+------------+
  *
  */
 
@@ -64,6 +66,7 @@ const join = (encodingCase: number, exponent: number, mantissa: number): string 
 const ZERO = join(3, 0, 0);
 const NEG_INF = join(0, 0, 0);
 const POS_INF = join(6, 0, 0);
+const NAN = join(7, 0, 0);
 
 export const encode = (stringOrNumber: string|number): string => {
 
@@ -72,7 +75,7 @@ export const encode = (stringOrNumber: string|number): string => {
     : stringOrNumber;
 
   if (Number.isNaN(mantissa)) {
-    throw new Error(`Cannot serialize NaN`);
+    return NAN;
   }
 
   if (mantissa === -Infinity) {
