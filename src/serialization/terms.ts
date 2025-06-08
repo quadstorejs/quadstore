@@ -169,6 +169,7 @@ export const termWriter: TermWriter<Term, 'F'> = {
               stringLiteralWriter.write(term, serialized, prefixes);
               break;
             case xsd.integer:
+            case xsd.float:
             case xsd.double:
             case xsd.decimal:
             case xsd.nonPositiveInteger:

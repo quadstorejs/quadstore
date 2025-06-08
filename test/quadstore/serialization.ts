@@ -103,6 +103,21 @@ export const runSerializationTests = () => {
         toEqualQuad(read, quad);
       });
     });
+    
+    it('Should serialize and deserialize a quad having a NaN literal term', async function () {
+      const { store: { dataFactory: factory, indexes }, prefixes } = this;
+      const quad = factory.quad(
+        factory.namedNode('http://ex.com/s'),
+        factory.namedNode('http://ex.com/p'),
+        factory.literal('NaN', factory.namedNode(xsd.double)),
+        factory.namedNode('http://ex.com/g'),
+      );
+      indexes.forEach((index: InternalIndex) => {
+        const key = twoStepsQuadWriter.ingest(quad, prefixes).write(index.prefix, index.terms);
+        const read = quadReader.read(key, index.prefix.length, index.terms, factory, prefixes);
+        toEqualQuad(read, quad);
+      });
+    });
 
   });
 

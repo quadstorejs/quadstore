@@ -12,6 +12,7 @@ export const boolean = `${xsd}boolean`;
 
 export const integer = `${xsd}integer`;
 export const decimal = `${xsd}decimal`;
+export const float = `${xsd}float`;
 export const double = `${xsd}double`;
 export const nonPositiveInteger = `${xsd}nonPositiveInteger`;
 export const negativeInteger = `${xsd}negativeInteger`;
