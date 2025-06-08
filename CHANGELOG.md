@@ -1,6 +1,14 @@
 
 # CHANGELOG
 
+## 15.3.0
+
+- *[new]* added support for (de)serializing NaN literals (`xsd:float`,
+  `xsd:double` but really any numeric type that can't be parsed into an
+  actual number).   
+  (https://github.com/quadstorejs/quadstore/issues/176)    
+  (https://github.com/quadstorejs/quadstore/pull/177)
+
 ## 15.2.0
 
 - *[internal]* reduced duplication, looping and unnecessary allocations when
