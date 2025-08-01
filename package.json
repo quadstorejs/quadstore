@@ -47,6 +47,7 @@
     "@types/chai": "^5.2.2",
     "@types/mocha": "^10.0.10",
     "@types/n3": "^1.26.0",
+    "@types/node": "^24.1.0",
     "@types/node-static": "^0.7.11",
     "browser-level": "^3.0.0",
     "chai": "^5.2.0",

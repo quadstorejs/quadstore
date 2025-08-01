@@ -1,7 +1,7 @@
 
 import type { EventEmitter } from 'events';
 import type { AbstractLevel } from 'abstract-level';
-import type { TSReadable, TermName } from '../types/index.js';
+import type { TermName, StreamLike } from '../types/index.js';
 
 export const isObject = (o: any): boolean => {
   return typeof(o) === 'object' && o !== null;
@@ -20,16 +20,16 @@ export const ensureAbstractLevel = (o: any, key: string) => {
   }
 };
 
-export const streamToArray = <T>(readStream: TSReadable<T>): Promise<T[]> => {
+export const streamToArray = <T>(source: StreamLike<T>): Promise<T[]> => {
   return new Promise((resolve, reject) => {
     const chunks: T[] = [];
     const onData = (chunk: T) => {
       chunks.push(chunk);
     };
     const cleanup = () => {
-      readStream.removeListener('data', onData);
-      readStream.removeListener('error', onError);
-      readStream.destroy();
+      source.removeListener('data', onData);
+      source.removeListener('error', onError);
+      source.destroy?.();
     };
     const onEnd = () => {
       cleanup();
@@ -39,9 +39,9 @@ export const streamToArray = <T>(readStream: TSReadable<T>): Promise<T[]> => {
       cleanup();
       reject(err);
     };
-    readStream.on('error', onError);
-    readStream.on('end', onEnd);
-    readStream.on('data', onData);
+    source.on('error', onError);
+    source.on('end', onEnd);
+    source.on('data', onData);
   });
 }
 

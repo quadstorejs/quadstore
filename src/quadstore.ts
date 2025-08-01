@@ -23,7 +23,7 @@ import type {
   Pattern,
   StoreOpts,
   VoidResult,
-  TSReadable,
+  StreamLike,
   TermName,
   Prefixes,
   QuadArrayResultWithInternals,
@@ -36,6 +36,7 @@ import type {
 } from 'abstract-level';
 import { EventEmitter } from 'events';
 import {
+    AsyncIterator,
   EmptyIterator,
   wrap,
 } from 'asynciterator';
@@ -120,7 +121,7 @@ export class Quadstore implements Store {
     await this.db.clear();
   }
 
-  match(subject?: Quad_Subject, predicate?: Quad_Predicate, object?: Quad_Object, graph?: Quad_Graph, opts: GetOpts = emptyObject): Stream<Quad> {
+  match(subject?: Quad_Subject, predicate?: Quad_Predicate, object?: Quad_Object, graph?: Quad_Graph, opts: GetOpts = emptyObject): AsyncIterator<Quad> {
     // This is required due to the fact that Comunica may invoke the `.match()`
     // method in generalized RDF mode, under which the subject may be a literal
     // term.
@@ -145,17 +146,17 @@ export class Quadstore implements Store {
     return results.approximateSize;
   }
 
-  import(source: Stream<Quad>): EventEmitter {
+  import(source: StreamLike<Quad>): EventEmitter {
     const emitter = new EventEmitter();
-    this.putStream(<TSReadable<Quad>>source, {})
+    this.putStream(source, {})
       .then(() => { emitter.emit('end'); })
       .catch((err) => { emitter.emit('error', err); });
     return emitter;
   }
 
-  remove(source: Stream<Quad>): EventEmitter {
+  remove(source: StreamLike<Quad>): EventEmitter {
     const emitter = new EventEmitter();
-    this.delStream(<TSReadable<Quad>>source, {})
+    this.delStream(source, {})
       .then(() => emitter.emit('end'))
       .catch((err) => emitter.emit('error', err));
     return emitter;
@@ -294,7 +295,7 @@ export class Quadstore implements Store {
     return await getStream(this, pattern, opts);
   }
 
-  async putStream(source: TSReadable<Quad>, opts: PutStreamOpts = emptyObject): Promise<VoidResult> {
+  async putStream(source: StreamLike<Quad>, opts: PutStreamOpts = emptyObject): Promise<VoidResult> {
     this.ensureReady();
     const batchSize = opts.batchSize || 1;
     if (batchSize === 1) {
@@ -305,7 +306,7 @@ export class Quadstore implements Store {
     return { type: ResultType.VOID };
   }
 
-  async delStream(source: TSReadable<Quad>, opts: DelStreamOpts = emptyObject): Promise<VoidResult> {
+  async delStream(source: StreamLike<Quad>, opts: DelStreamOpts = emptyObject): Promise<VoidResult> {
     this.ensureReady();
     const batchSize = opts.batchSize || 1;
     if (batchSize === 1) {
