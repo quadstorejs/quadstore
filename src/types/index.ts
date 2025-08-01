@@ -153,6 +153,7 @@ export type TermWriter<T extends Term, E extends 'T' | 'F'> = E extends 'T'
 export interface StreamLike<T = any> extends EventEmitter {
   read(): T | null; 
   destroy?: () => void;
+  readable?: boolean;
   on(event: 'readable', listener: () => void): this;
   on(event: 'end', listener: () => void): this;
   on(event: 'error', listener: (error: Error) => void): this;
