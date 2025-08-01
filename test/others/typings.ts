@@ -33,6 +33,14 @@ export const runTypingsTests = () => {
       
     });
     
+    describe('AsyncIterator', () => {
+
+      it('should extend the RDF/JS Stream interface when using the RDF/JS Quad interface as the type parameter', () => {
+        const t: Stream = ({} as AsyncIterator<Quad>);
+      });
+      
+    });
+    
     describe('Quadstore.prototype.match()', () => { 
       
       it('should return an AsyncIterator instance', () => { 
