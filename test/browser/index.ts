@@ -5,6 +5,6 @@ import { runOtherTests } from '../others/others.js';
 import { runTypingsTests } from '../others/typings.js';
 
 runOtherTests();
-runTypingsTests();
+runTypingsTests(false);
 runMemoryLevelTests();
 runBrowserLevelTests();

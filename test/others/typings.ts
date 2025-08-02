@@ -7,8 +7,7 @@ import { Quadstore } from '../../dist/quadstore.js';
 import { MemoryLevel } from 'memory-level';
 import { DataFactory } from 'rdf-data-factory';
 
-
-export const runTypingsTests = () => {
+export const runTypingsTests = (isNode: boolean) => {
   
   describe('Typings', () => { 
     
@@ -29,6 +28,12 @@ export const runTypingsTests = () => {
       
       it('should be extended by the AsyncIterator interface', () => {
         const t: StreamLike<'foo'> = ({} as AsyncIterator<'foo'>);
+      });
+      
+      isNode && it('should be extended by Node\'s native Readable interface', async () => {
+        const { Readable } = await import('stream');
+        const ta: StreamLike<any> = new Readable();
+        const tq: StreamLike<Quad> = new Readable();
       });
       
     });
@@ -69,6 +74,32 @@ export const runTypingsTests = () => {
       
       it('should return an iterable object', async () => { 
         const t: AsyncIterable<Quad> = (await store.getStream({})).iterator;
+      });
+      
+    });
+    
+    describe('Quadstore.prototype.putStream()', () => { 
+      
+      isNode && it('should accept an instance of Node\'s native Readable class', async () => {
+        const { Readable } = await import('stream');
+        await store.putStream(new Readable({
+          read() {
+            this.push(null);
+          }
+        }));
+      });
+      
+    });
+    
+    describe('Quadstore.prototype.delStream()', () => { 
+      
+      isNode && it('should accept an instance of Node\'s native Readable class', async () => {
+        const { Readable } = await import('stream');
+        await store.delStream(new Readable({
+          read() {
+            this.push(null);
+          }
+        }));
       });
       
     });
