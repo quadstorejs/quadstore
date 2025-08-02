@@ -1,14 +1,14 @@
 
-import { TSReadable } from '../types/index.js';
+import { StreamLike } from '../types/index.js';
 
-export const consumeOneByOne = async <T>(iterator: TSReadable<T>, onEachItem: (item: T) => any) => {
+export const consumeOneByOne = async <T>(source: StreamLike<T>, onEachItem: (item: T) => any) => {
   return new Promise<void>((resolve, reject) => {
     let item;
     let ended = false;
     let looping = false;
     const loop = () => {
       looping = true;
-      if ((item = iterator.read()) !== null) {
+      if ((item = source.read()) !== null) {
         Promise.resolve(onEachItem(item))
           .then(loop)
           .catch(onError);
@@ -36,18 +36,16 @@ export const consumeOneByOne = async <T>(iterator: TSReadable<T>, onEachItem: (i
       }
     };
     const cleanup = () => {
-      iterator.removeListener('end', onEnd);
-      iterator.removeListener('error', onError);
-      iterator.removeListener('readable', onReadable);
-      if (typeof iterator.destroy === 'function') {
-        iterator.destroy();
-      }
+      source.removeListener('end', onEnd);
+      source.removeListener('error', onError);
+      source.removeListener('readable', onReadable);
+      source.destroy?.();
     };
-    iterator.on('end', onEnd);
-    iterator.on('error', onError);
-    iterator.on('readable', onReadable);
+    source.on('end', onEnd);
+    source.on('error', onError);
+    source.on('readable', onReadable);
     // readable might be undefined in older versions of userland readable-stream
-    if (iterator.readable !== false) {
+    if ('readable' in source && source.readable) {
       loop();
     }
   });

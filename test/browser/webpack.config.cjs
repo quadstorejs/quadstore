@@ -20,6 +20,10 @@ module.exports = {
     usedExports: true,
     concatenateModules: false
   },
-  resolve: {},
+  resolve: {
+    fallback: {
+      stream: false,
+    },
+  },
   plugins: []
 };

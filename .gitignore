@@ -334,6 +334,7 @@ dist/cjs
 .rdf-test-suite-cache
 
 test/**/*.d.ts
+test/**/*.js.map
 test/backends/*.js
 test/browser/index.js
 test/browser/index.bundle.js

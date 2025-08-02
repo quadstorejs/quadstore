@@ -1,7 +1,7 @@
 
-import { TSReadable } from '../types/index.js';
+import { StreamLike } from '../types/index.js';
 
-export const consumeInBatches = async <T>(readable: TSReadable<T>, batchSize: number, onEachBatch: (items: T[]) => any): Promise<void> => {
+export const consumeInBatches = async <T>(source: StreamLike<T>, batchSize: number, onEachBatch: (items: T[]) => any): Promise<void> => {
   return new Promise((resolve, reject) => {
     let bufpos = 0;
     let looping = false;
@@ -39,7 +39,7 @@ export const consumeInBatches = async <T>(readable: TSReadable<T>, batchSize: nu
         flushAndResolve();
         return;
       }
-      while (bufpos < batchSize && (item = readable.read()) !== null) {
+      while (bufpos < batchSize && (item = source.read()) !== null) {
         buffer[bufpos++] = item;
       }
       if (item === null) {
@@ -54,17 +54,15 @@ export const consumeInBatches = async <T>(readable: TSReadable<T>, batchSize: nu
       }
     };
     const cleanup = () => {
-      readable.removeListener('end', onEnd);
-      readable.removeListener('error', onError);
-      readable.removeListener('readable', onReadable);
-      if (typeof readable.destroy === 'function') {
-        readable.destroy();
-      }
+      source.removeListener('end', onEnd);
+      source.removeListener('error', onError);
+      source.removeListener('readable', onReadable);
+        source.destroy?.();
     };
-    readable.on('end', onEnd);
-    readable.on('error', onError);
-    readable.on('readable', onReadable);
-    if (readable.readable !== false) {
+    source.on('end', onEnd);
+    source.on('error', onError);
+    source.on('readable', onReadable);
+    if ('readable' in source && source.readable) {
       loop();
     }
   });

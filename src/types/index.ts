@@ -1,10 +1,10 @@
 
-import type { Readable } from 'stream';
 import type { AbstractChainedBatch, AbstractLevel } from 'abstract-level'
 import type { AsyncIterator } from 'asynciterator';
 import type { Literal, DataFactory, Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph, Quad, Term } from '@rdfjs/types';
 import type { Scope } from '../scope/index.js';
 import type { AbstractIteratorOptions } from 'abstract-level';
+import type { EventEmitter } from 'events';
 
 export interface BatchOpts {
   /**
@@ -26,8 +26,6 @@ export interface PatchOpts extends BatchOpts {
 }
 
 export type TermName = 'subject' | 'predicate' | 'object' | 'graph';
-
-export type TSReadable<T> = Readable | AsyncIterator<T>;
 
 export enum ResultType {
   VOID = 'void',
@@ -151,3 +149,13 @@ export type TermWriter<T extends Term, E extends 'T' | 'F'> = E extends 'T'
   ? { write(node: T, serialized: SerializedTerm, prefixes: Prefixes, rangeMode: boolean, encodedValue: string): void }
   : { write(node: T, serialized: SerializedTerm, prefixes: Prefixes): void }
   ;
+
+export interface StreamLike<T = any> extends EventEmitter {
+  read(): T | null; 
+  destroy?: () => void;
+  readable?: boolean;
+  on(event: 'readable', listener: () => void): this;
+  on(event: 'end', listener: () => void): this;
+  on(event: 'error', listener: (error: Error) => void): this;
+  on(event: 'data', listener: (item: T) => void): this;
+}
