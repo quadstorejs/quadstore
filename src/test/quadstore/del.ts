@@ -1,12 +1,15 @@
 
+import { TestContext } from 'node:test';
 import { equalsQuadArray } from '../utils/expect.js';
+import { QuadstoreContextProvider } from '../utils/context.js';
 
-export const runDelTests = () => {
+export const runDelTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
-  describe('Quadstore.prototype.del()', () => {
+  await t.test('Quadstore.prototype.del()', async (_t) => {
 
-    it('should delete a quad correctly', async function () {
-      const { dataFactory, store } = this;
+    await _t.test('should delete a quad correctly', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const quads = [
         dataFactory.quad(
           dataFactory.namedNode('ex://s'),
@@ -31,10 +34,11 @@ export const runDelTests = () => {
 
   });
 
-  describe('Quadstore.prototype.multiDel()', () => {
+  await t.test('Quadstore.prototype.multiDel()', async (_t) => {
 
-    it('should delete a quad correctly', async function () {
-      const { dataFactory, store } = this;
+    await _t.test('should delete a quad correctly', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const quads = [
         dataFactory.quad(
           dataFactory.namedNode('ex://s'),

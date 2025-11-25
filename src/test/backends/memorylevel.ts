@@ -1,24 +1,24 @@
 
 import { MemoryLevel } from 'memory-level';
-import { DataFactory } from 'rdf-data-factory';
-import { runQuadstoreTests } from '../quadstore/quadstore.js';
+import { QuadstoreContext, QuadstoreContextProvider } from '../utils/context.js';
+import { Prefixes } from '../../types/index.js';
 
-export const runMemoryLevelTests = () => {
 
-  describe('MemoryLevel backend', () => {
+export class MemoryLevelContext extends QuadstoreContext {
 
-    beforeEach(async function () {
-      this.db = new MemoryLevel();
-      this.indexes = null;
-      this.dataFactory = new DataFactory();
-      this.prefixes = {
-        expandTerm: (term: string) => term,
-        compactIri: (iri: string) => iri,
-      };
-    });
+  constructor(prefixes?: Prefixes) {
+    const db = new MemoryLevel();
+    super(db, prefixes);
+  }
 
-    runQuadstoreTests();
+}
 
-  });
+export class MemoryLevelContextProvider extends QuadstoreContextProvider {
 
-};
+  async getContext() {
+    const ctx = new MemoryLevelContext(this.prefixes);
+    await ctx.store.open();
+    return ctx;
+  }
+
+}

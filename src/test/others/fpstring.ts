@@ -1,12 +1,13 @@
 
 import { toStrictlyEqual } from '../utils/expect.js';
 import { encode } from '../../serialization/fpstring.js';
+import { TestContext } from 'node:test';
 
-export const runFpstringTests = () => {
+export const runFpstringTests = async (t: TestContext) => {
 
-  describe('Floating-point serialization', () => {
+  await t.test('Floating-point serialization', async (_t) => {
 
-    it('should produce strings whose lexicographical sorting matches the natural sorting of the original values', async () => {
+    await _t.test('should produce strings whose lexicographical sorting matches the natural sorting of the original values', async () => {
 
       const values = [
         -123123,

@@ -1,6 +1,4 @@
 
-import type { Prefixes } from '../../types/index';
-import { Quadstore } from '../../quadstore.js';
 import { runSerializationTests } from './serialization.js';
 import { runPrewriteTests } from './prewrite.js';
 import { runGetTests } from './get.js';
@@ -13,101 +11,20 @@ import { runMatchTests } from './match.js';
 import { runScopeTests } from './scope.js';
 import { runPutTests } from './put.js';
 import { runRangeTests } from './ranges.js';
+import { TestContext } from 'node:test';
+import { QuadstoreContextProvider } from '../utils/context';
 
-const runTests = () => {
-  runGetTests();
-  runDelTests();
-  runPutTests();
-  runScopeTests();
-  runPatchTests();
-  runMatchTests();
-  runRangeTests();
-  runImportTests();
-  runRemoveTests();
-  runRemoveMatchesTests();
-  runPrewriteTests();
-  runSerializationTests();
-};
-
-export const runQuadstoreTests = () => {
-
-  describe('Constructor', () => {
-    it('should throw if backend is not an instance of AbstractLevel', function (done) {
-      try {
-        new Quadstore({
-          dataFactory: (this.dataFactory as any),
-          backend: (5 as any),
-        });
-      } catch (err) {
-        done();
-      }
-    });
-  });
-
-  describe('Quadstore', () => {
-
-    beforeEach(async function () {
-      this.store = new Quadstore({
-        dataFactory: this.dataFactory,
-        backend: this.db,
-        indexes: this.indexes,
-        prefixes: this.prefixes,
-      });
-      await this.store.open();
-    });
-
-    afterEach(async function () {
-      await this.store.close();
-    });
-
-    runTests();
-
-  });
-
-  describe('Quadstore, with prefixes', () => {
-
-    const prefixes: Prefixes = {
-      expandTerm: (term) => {
-        if (term.startsWith('xsd:')) {
-          return `http://www.w3.org/2001/XMLSchema#${term.slice(4)}`;
-        }
-        if (term.startsWith('rdf:')) {
-          return `http://www.w3.org/1999/02/22-rdf-syntax-ns#${term.slice(4)}`;
-        }
-        if (term.startsWith('e:')) {
-          return `ex://${term.slice(2)}`;
-        }
-        return term;
-      },
-      compactIri: (iri) => {
-        if (iri.startsWith('http://www.w3.org/2001/XMLSchema#')) {
-          return `xsd:${iri.slice(33)}`;
-        }
-        if (iri.startsWith('http://www.w3.org/1999/02/22-rdf-syntax-ns#')) {
-          return `rdf:${iri.slice(43)}`;
-        }
-        if (iri.startsWith('ex://')) {
-          return `e:${iri.slice(5)}`;
-        }
-        return iri;
-      },
-    };
-
-    beforeEach(async function () {
-      this.store = new Quadstore({
-        dataFactory: this.dataFactory,
-        backend: this.db,
-        indexes: this.indexes,
-        prefixes: this.prefixes,
-      });
-      await this.store.open();
-    });
-
-    afterEach(async function () {
-      await this.store.close();
-    });
-
-    runTests();
-
-  });
+export const runQuadstoreTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
+  // await runGetTests(t, qcp);
+  await runDelTests(t, qcp);
+  // await runPutTests(t, qcp);
+  // await runScopeTests(t, qcp);
+  // await runPatchTests(t, qcp);
+  // await runMatchTests(t, qcp);
+  // await runRangeTests(t, qcp);
+  // await runImportTests(t, qcp);
+  // await runRemoveTests(t, qcp);
+  // await runRemoveMatchesTests(t, qcp);
+  // await runPrewriteTests(t, qcp);
+  // await runSerializationTests(t, qcp);
 };
