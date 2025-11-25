@@ -27,7 +27,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "watch": "npm run clean && tsc --watch",
-    "test": "cd dist/test && mocha node.js --reporter spec",
+    "test": "node --test dist/test/main.js",
     "build": "npm run clean && tsc -p tsconfig.json",
     "publish:alpha": "npm run build && npm publish --tag alpha",
     "publish:beta": "npm run build && npm publish --tag beta"
@@ -43,13 +43,10 @@
   },
   "devDependencies": {
     "@types/chai": "^5.2.2",
-    "@types/mocha": "^10.0.10",
     "@types/node": "^24.8.1",
     "chai": "^6.2.0",
     "classic-level": "^3.0.0",
-    "expect.js": "^0.3.1",
     "memory-level": "^3.1.0",
-    "mocha": "^11.7.4",
     "rdf-data-factory": "^2.0.2",
     "typescript": "^5.9.3"
   },
