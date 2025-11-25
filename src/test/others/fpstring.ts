@@ -1,6 +1,6 @@
 
 import { toStrictlyEqual } from '../utils/expect.js';
-import { encode } from '../../dist/serialization/fpstring.js';
+import { encode } from '../../serialization/fpstring.js';
 
 export const runFpstringTests = () => {
 

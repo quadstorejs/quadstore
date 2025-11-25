@@ -1,5 +1,5 @@
 
-import * as xsd from '../../dist/serialization/xsd.js';
+import * as xsd from '../../serialization/xsd.js';
 import { equalsQuadArray, toBeFalse, toStrictlyEqual, toBeTrue, arrayToStartWith, arrayToHaveLength } from '../utils/expect.js';
 
 export const runGetTests = () => {

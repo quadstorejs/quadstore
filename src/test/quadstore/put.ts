@@ -1,10 +1,10 @@
 
 import type {Quad, Term} from '@rdfjs/types';
 import { ArrayIterator } from 'asynciterator';
-import { streamToArray } from '../../dist/utils/stuff.js';
-import { Scope, ScopeLabelMapping } from '../../dist/scope/index.js';
+import { streamToArray } from '../../utils/stuff.js';
+import { Scope, ScopeLabelMapping } from '../../scope/index.js';
 import { arrayToHaveLength, equalsQuadArray, toBeAnArray, toBeFalse, toStrictlyEqual, toBeTrue } from '../utils/expect.js';
-import { LevelIterator } from '../../dist/get/leveliterator.js';
+import { LevelIterator } from '../../get/leveliterator.js';
 
 export const runPutTests = () => {
 

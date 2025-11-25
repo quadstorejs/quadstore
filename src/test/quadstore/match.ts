@@ -1,7 +1,7 @@
 
 
 import { ArrayIterator }  from 'asynciterator';
-import { waitForEvent, streamToArray }  from '../../dist/utils/stuff.js';
+import { waitForEvent, streamToArray }  from '../../utils/stuff.js';
 import { arrayToHaveLength, equalsQuadArray } from '../utils/expect.js';
 
 export const runMatchTests = () => {
@@ -33,7 +33,7 @@ export const runMatchTests = () => {
 
         equalsQuadArray(matchedQuads, [quads[1]]);
       });
-      
+
       it('should match quads by predicate',  async function () {
         const { dataFactory, store } = this;
         const quads = [

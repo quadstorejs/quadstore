@@ -1,8 +1,8 @@
 
-import type {InternalIndex} from '../../dist/types/index.js';
+import type {InternalIndex} from '../../types/index.js';
 
-import * as xsd from '../../dist/serialization/xsd.js';
-import {quadReader, twoStepsQuadWriter} from '../../dist/serialization/index.js';
+import * as xsd from '../../serialization/xsd.js';
+import {quadReader, twoStepsQuadWriter} from '../../serialization/index.js';
 import { toEqualQuad } from '../utils/expect.js';
 
 export const runSerializationTests = () => {
@@ -103,7 +103,7 @@ export const runSerializationTests = () => {
         toEqualQuad(read, quad);
       });
     });
-    
+
     it('Should serialize and deserialize a quad having a NaN literal term', async function () {
       const { store: { dataFactory: factory, indexes }, prefixes } = this;
       const quad = factory.quad(

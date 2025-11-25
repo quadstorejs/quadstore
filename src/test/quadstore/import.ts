@@ -1,6 +1,6 @@
 
 import { ArrayIterator } from 'asynciterator';
-import { waitForEvent, streamToArray } from '../../dist/utils/stuff.js';
+import { waitForEvent, streamToArray } from '../../utils/stuff.js';
 import { arrayToHaveLength } from '../utils/expect.js';
 
 export const runImportTests = () => {

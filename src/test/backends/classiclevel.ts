@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { ClassicLevel } from 'classic-level';
 import { DataFactory } from 'rdf-data-factory';
-import { uid } from '../../dist/utils/uid.js';
+import { uid } from '../../utils/uid.js';
 import { runQuadstoreTests } from '../quadstore/quadstore.js';
 
 export const runClassicLevelTests = () => {
