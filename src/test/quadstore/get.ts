@@ -54,6 +54,21 @@ const addQuadsToStore = async (ctx: QuadstoreContext) => {
   return quads;
 };
 
+const addOrderedQuadsToStore = async (ctx: QuadstoreContext) => {
+  const { dataFactory, store } = ctx;
+  const subject = dataFactory.namedNode('ex://s');
+  const graph = dataFactory.namedNode('ex://g');
+  const decimal = dataFactory.namedNode(xsd.decimal);
+  for (let i = 10; i < 100; i += 1) {
+    await store.put(dataFactory.quad(
+      subject,
+      dataFactory.namedNode(`ex://p${99 - i}`),
+      dataFactory.literal(`${i}`, decimal),
+      graph,
+    ));
+  }
+};
+
 export const runGetTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
   await t.test('Quadstore.prototype.get()', async (_t) => {
@@ -341,165 +356,166 @@ export const runGetTests = async (t: TestContext, qcp: QuadstoreContextProvider)
 
   });
 
-  // describe('Quadstore.prototype.get() w/ order', () => {
+  await t.test('Quadstore.prototype.get() w/ order', async (_t) => {
 
-  //   beforeEach(async function () {
-  //     const { dataFactory } = this;
-  //     const subject = dataFactory.namedNode('ex://s');
-  //     const graph = dataFactory.namedNode('ex://g');
-  //     const decimal = dataFactory.namedNode(xsd.decimal);
-  //     for (let i = 10; i < 100; i += 1) {
-  //       await this.store.put(dataFactory.quad(
-  //         subject,
-  //         dataFactory.namedNode(`ex://p${99 - i}`),
-  //         dataFactory.literal(`${i}`, decimal),
-  //         graph,
-  //       ));
-  //     }
-  //   });
+    await _t.test('should produce the same results whether sorting in-memory or not', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      await addOrderedQuadsToStore(ctx);
+      const memResults = await store.get(
+        { graph: dataFactory.namedNode('ex://g') },
+        { order: ['object'] },
+      );
+      toBeTrue(memResults.resorted);
+      const idxResults = await store.get(
+        { subject: dataFactory.namedNode('ex://s') },
+        { order: ['object'] },
+      );
+      toBeFalse(idxResults.resorted);
+      arrayToStartWith(idxResults.order, ['object']);
+      arrayToStartWith(memResults.order, ['object']);
+      arrayToHaveLength(idxResults.items, 90);
+      equalsQuadArray(idxResults.items, memResults.items);
+      toStrictlyEqual(idxResults.items[0].object.value, '10');
+      toStrictlyEqual(idxResults.items[89].object.value, '99');
+    });
 
-  //   it('should produce the same results whether sorting in-memory or not', async function () {
-  //     const { dataFactory, store } = this;
-  //     const memResults = await store.get(
-  //       { graph: dataFactory.namedNode('ex://g') },
-  //       { order: ['object'] },
-  //     );
-  //     toBeTrue(memResults.resorted);
-  //     const idxResults = await store.get(
-  //       { subject: dataFactory.namedNode('ex://s') },
-  //       { order: ['object'] },
-  //     );
-  //     toBeFalse(idxResults.resorted);
-  //     arrayToStartWith(idxResults.order, ['object']);
-  //     arrayToStartWith(memResults.order, ['object']);
-  //     arrayToHaveLength(idxResults.items, 90);
-  //     equalsQuadArray(idxResults.items, memResults.items);
-  //     toStrictlyEqual(idxResults.items[0].object.value, '10');
-  //     toStrictlyEqual(idxResults.items[89].object.value, '99');
-  //   });
+    await _t.test('should produce the same results whether sorting in-memory or not, in reverse', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      await addOrderedQuadsToStore(ctx);
+      const memResults = await store.get(
+        { graph: dataFactory.namedNode('ex://g') },
+        { order: ['object'], reverse: true },
+      );
+      toBeTrue(memResults.resorted);
+      const idxResults = await store.get(
+        { subject: dataFactory.namedNode('ex://s') },
+        { order: ['object'], reverse: true },
+      );
+      toBeFalse(idxResults.resorted);
+      arrayToStartWith(idxResults.order, ['object']);
+      arrayToStartWith(memResults.order, ['object']);
+      arrayToHaveLength(idxResults.items, 90);
+      equalsQuadArray(idxResults.items, memResults.items);
+      toStrictlyEqual(idxResults.items[0].object.value, '99');
+      toStrictlyEqual(idxResults.items[89].object.value, '10');
+    });
 
-  //   it('should produce the same results whether sorting in-memory or not, in reverse', async function () {
-  //     const { dataFactory, store } = this;
-  //     const memResults = await store.get(
-  //       { graph: dataFactory.namedNode('ex://g') },
-  //       { order: ['object'], reverse: true },
-  //     );
-  //     toBeTrue(memResults.resorted);
-  //     const idxResults = await store.get(
-  //       { subject: dataFactory.namedNode('ex://s') },
-  //       { order: ['object'], reverse: true },
-  //     );
-  //     toBeFalse(idxResults.resorted);
-  //     arrayToStartWith(idxResults.order, ['object']);
-  //     arrayToStartWith(memResults.order, ['object']);
-  //     arrayToHaveLength(idxResults.items, 90);
-  //     equalsQuadArray(idxResults.items, memResults.items);
-  //     toStrictlyEqual(idxResults.items[0].object.value, '99');
-  //     toStrictlyEqual(idxResults.items[89].object.value, '10');
-  //   });
+    await _t.test('should order by predicate while querying for a range of object literals, sorting in memory', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      await addOrderedQuadsToStore(ctx);
+      const memResults = await store.get(
+        {
+          object: {
+            termType: 'Range',
+            lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
+          },
+        },
+        { order: ['predicate'] },
+      );
+      toBeTrue(memResults.resorted);
+      arrayToHaveLength(memResults.items, 10);
+      toStrictlyEqual(memResults.items[0].predicate.value, `ex://p80`);
+      toStrictlyEqual(memResults.items[9].predicate.value, `ex://p89`);
+    });
 
-  //   it('should order by predicate while querying for a range of object literals, sorting in memory', async function () {
-  //     const { dataFactory, store } = this;
-  //     const memResults = await store.get(
-  //       {
-  //         object: {
-  //           termType: 'Range',
-  //           lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
-  //         },
-  //       },
-  //       { order: ['predicate'] },
-  //     );
-  //     toBeTrue(memResults.resorted);
-  //     arrayToHaveLength(memResults.items, 10);
-  //     toStrictlyEqual(memResults.items[0].predicate.value, `ex://p80`);
-  //     toStrictlyEqual(memResults.items[9].predicate.value, `ex://p89`);
-  //   });
+    await _t.test('should order by predicate while querying for a range of object literals, sorting in memory, limiting', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      await addOrderedQuadsToStore(ctx);
+      const memResults = await store.get(
+        {
+          object: {
+            termType: 'Range',
+            lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
+          },
+        },
+        { order: ['predicate'], limit: 2 },
+      );
+      toBeTrue(memResults.resorted);
+      arrayToHaveLength(memResults.items, 2);
+      toStrictlyEqual(memResults.items[0].predicate.value, `ex://p80`);
+      toStrictlyEqual(memResults.items[1].predicate.value, `ex://p81`);
+    });
 
-  //   it('should order by predicate while querying for a range of object literals, sorting in memory, limiting', async function () {
-  //     const { dataFactory, store } = this;
-  //     const memResults = await store.get(
-  //       {
-  //         object: {
-  //           termType: 'Range',
-  //           lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
-  //         },
-  //       },
-  //       { order: ['predicate'], limit: 2 },
-  //     );
-  //     toBeTrue(memResults.resorted);
-  //     arrayToHaveLength(memResults.items, 2);
-  //     toStrictlyEqual(memResults.items[0].predicate.value, `ex://p80`);
-  //     toStrictlyEqual(memResults.items[1].predicate.value, `ex://p81`);
-  //   });
+    await _t.test('should order by predicate while querying for a range of object literals, sorting in memory, in reverse', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      await addOrderedQuadsToStore(ctx);
+      const memResults = await store.get(
+        {
+          object: {
+            termType: 'Range',
+            lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
+          },
+        },
+        { order: ['predicate'], reverse: true },
+      );
+      toBeTrue(memResults.resorted);
+      arrayToHaveLength(memResults.items, 10);
+      toStrictlyEqual(memResults.items[0].predicate.value, `ex://p89`);
+      toStrictlyEqual(memResults.items[9].predicate.value, `ex://p80`);
+    });
 
-  //   it('should order by predicate while querying for a range of object literals, sorting in memory, in reverse', async function () {
-  //     const { dataFactory, store } = this;
-  //     const memResults = await store.get(
-  //       {
-  //         object: {
-  //           termType: 'Range',
-  //           lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
-  //         },
-  //       },
-  //       { order: ['predicate'], reverse: true },
-  //     );
-  //     toBeTrue(memResults.resorted);
-  //     arrayToHaveLength(memResults.items, 10);
-  //     toStrictlyEqual(memResults.items[0].predicate.value, `ex://p89`);
-  //     toStrictlyEqual(memResults.items[9].predicate.value, `ex://p80`);
-  //   });
+    await _t.test('should order by predicate while querying for a range of object literals, sorting in memory, in reverse, limiting', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      await addOrderedQuadsToStore(ctx);
+      const memResults = await store.get(
+        {
+          object: {
+            termType: 'Range',
+            lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
+          },
+        },
+        { order: ['predicate'], reverse: true, limit: 2 },
+      );
+      toBeTrue(memResults.resorted);
+      arrayToHaveLength(memResults.items, 2);
+      toStrictlyEqual(memResults.items[0].predicate.value, `ex://p89`);
+      toStrictlyEqual(memResults.items[1].predicate.value, `ex://p88`);
+    });
 
-  //   it('should order by predicate while querying for a range of object literals, sorting in memory, in reverse, limiting', async function () {
-  //     const { dataFactory, store } = this;
-  //     const memResults = await store.get(
-  //       {
-  //         object: {
-  //           termType: 'Range',
-  //           lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
-  //         },
-  //       },
-  //       { order: ['predicate'], reverse: true, limit: 2 },
-  //     );
-  //     toBeTrue(memResults.resorted);
-  //     arrayToHaveLength(memResults.items, 2);
-  //     toStrictlyEqual(memResults.items[0].predicate.value, `ex://p89`);
-  //     toStrictlyEqual(memResults.items[1].predicate.value, `ex://p88`);
-  //   });
+    await _t.test('should order by object while querying for a range of object literals without sorting in memory', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      await addOrderedQuadsToStore(ctx);
+      const memResults = await store.get(
+        {
+          object: {
+            termType: 'Range',
+            lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
+          },
+        },
+        { order: ['object'] },
+      );
+      toBeFalse(memResults.resorted);
+      arrayToHaveLength(memResults.items, 10);
+      toStrictlyEqual(memResults.items[0].object.value, `10`);
+      toStrictlyEqual(memResults.items[9].object.value, `19`);
+    });
 
-  //   it('should order by object while querying for a range of object literals without sorting in memory', async function () {
-  //     const { dataFactory, store } = this;
-  //     const memResults = await store.get(
-  //       {
-  //         object: {
-  //           termType: 'Range',
-  //           lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
-  //         },
-  //       },
-  //       { order: ['object'] },
-  //     );
-  //     toBeFalse(memResults.resorted);
-  //     arrayToHaveLength(memResults.items, 10);
-  //     toStrictlyEqual(memResults.items[0].object.value, `10`);
-  //     toStrictlyEqual(memResults.items[9].object.value, `19`);
-  //   });
+    await _t.test('should order by object while querying for a range of object literals without sorting in memory, in reverse', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      await addOrderedQuadsToStore(ctx);
+      const memResults = await store.get(
+        {
+          object: {
+            termType: 'Range',
+            lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
+          },
+        },
+        { order: ['object'], reverse: true },
+      );
+      toBeFalse(memResults.resorted);
+      arrayToHaveLength(memResults.items, 10);
+      toStrictlyEqual(memResults.items[0].object.value, `19`);
+      toStrictlyEqual(memResults.items[9].object.value, `10`);
+    });
 
-  //   it('should order by object while querying for a range of object literals without sorting in memory, in reverse', async function () {
-  //     const { dataFactory, store } = this;
-  //     const memResults = await store.get(
-  //       {
-  //         object: {
-  //           termType: 'Range',
-  //           lt: dataFactory.literal('20', dataFactory.namedNode(xsd.decimal)),
-  //         },
-  //       },
-  //       { order: ['object'], reverse: true },
-  //     );
-  //     toBeFalse(memResults.resorted);
-  //     arrayToHaveLength(memResults.items, 10);
-  //     toStrictlyEqual(memResults.items[0].object.value, `19`);
-  //     toStrictlyEqual(memResults.items[9].object.value, `10`);
-  //   });
-
-  // });
+  });
 
 };
