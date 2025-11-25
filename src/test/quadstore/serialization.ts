@@ -1,16 +1,18 @@
-
 import type {InternalIndex} from '../../types/index.js';
 
+import { TestContext } from 'node:test';
 import * as xsd from '../../serialization/xsd.js';
 import {quadReader, twoStepsQuadWriter} from '../../serialization/index.js';
 import { toEqualQuad } from '../utils/expect.js';
+import { QuadstoreContextProvider } from '../utils/context.js';
 
-export const runSerializationTests = () => {
+export const runSerializationTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
-  describe('Quadstore serialization', function () {
+  await t.test('Quadstore serialization', async (_t) => {
 
-    it('Should serialize and deserialize quads with named nodes', function () {
-      const { store } = this;
+    await _t.test('Should serialize and deserialize quads with named nodes', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
       const { indexes, prefixes, dataFactory: factory } = store;
       const quad = factory.quad(
         factory.namedNode('http://ex.com/s'),
@@ -25,8 +27,9 @@ export const runSerializationTests = () => {
       });
     });
 
-    it('Should serialize and deserialize quads in the default graph', function () {
-      const { store } = this;
+    await _t.test('Should serialize and deserialize quads in the default graph', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
       const { indexes, prefixes, dataFactory: factory } = store;
       const quad = factory.quad(
         factory.namedNode('http://ex.com/s'),
@@ -41,8 +44,9 @@ export const runSerializationTests = () => {
       });
     });
 
-    it('Should serialize and deserialize quads with generic literals', function () {
-      const { store } = this;
+    await _t.test('Should serialize and deserialize quads with generic literals', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
       const { indexes, prefixes, dataFactory: factory } = store;
       const quad = factory.quad(
         factory.namedNode('http://ex.com/s'),
@@ -57,8 +61,9 @@ export const runSerializationTests = () => {
       });
     });
 
-    it('Should serialize and deserialize quads with named nodes and language-tagged literals', function () {
-      const { store } = this;
+    await _t.test('Should serialize and deserialize quads with named nodes and language-tagged literals', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
       const { indexes, prefixes, dataFactory: factory } = store;
       const quad = factory.quad(
         factory.namedNode('http://ex.com/s'),
@@ -73,8 +78,9 @@ export const runSerializationTests = () => {
       });
     });
 
-    it('Should serialize and deserialize quads with named nodes and numeric literals', function () {
-      const { store } = this;
+    await _t.test('Should serialize and deserialize quads with named nodes and numeric literals', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
       const { indexes, prefixes, dataFactory: factory } = store;
       const quad = factory.quad(
         factory.namedNode('http://ex.com/s'),
@@ -89,8 +95,10 @@ export const runSerializationTests = () => {
       });
     });
 
-    it('Should serialize and deserialize a quad having a literal term that serializes to a string longer than 127 chars', async function () {
-      const { store: { dataFactory: factory, indexes }, prefixes } = this;
+    await _t.test('Should serialize and deserialize a quad having a literal term that serializes to a string longer than 127 chars', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
+      const { prefixes, dataFactory: factory, indexes } = store;
       const quad = factory.quad(
         factory.namedNode('http://ex.com/s'),
         factory.namedNode('http://ex.com/p'),
@@ -104,8 +112,10 @@ export const runSerializationTests = () => {
       });
     });
 
-    it('Should serialize and deserialize a quad having a NaN literal term', async function () {
-      const { store: { dataFactory: factory, indexes }, prefixes } = this;
+    await _t.test('Should serialize and deserialize a quad having a NaN literal term', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
+      const { prefixes, dataFactory: factory, indexes } = store;
       const quad = factory.quad(
         factory.namedNode('http://ex.com/s'),
         factory.namedNode('http://ex.com/p'),

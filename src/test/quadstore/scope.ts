@@ -1,32 +1,35 @@
-
-
+import { TestContext } from 'node:test';
 import { streamToArray } from '../../utils/stuff.js';
 import { Scope } from '../../scope/index.js';
 import { LevelIterator } from '../../get/leveliterator.js';
 import { arrayToHaveLength, toNotEqualTerm, toBeAnArray, toBeInstanceOf } from '../utils/expect.js';
+import { QuadstoreContextProvider } from '../utils/context.js';
 
-export const runScopeTests = () => {
+export const runScopeTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
-  describe('Quadstore.prototype.initScope()', () => {
+  await t.test('Quadstore.prototype.initScope()', async (_t) => {
 
-    it('Should return a newly-instantiated scope', async function () {
-      const { store } = this;
+    await _t.test('Should return a newly-instantiated scope', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
       const scope = await store.initScope();
       toBeInstanceOf(scope, Scope);
     });
 
   });
 
-  describe('Quadstore.prototype.loadScope()', () => {
+  await t.test('Quadstore.prototype.loadScope()', async (_t) => {
 
-    it('Should return a newly-instantiated scope', async function () {
-      const { store } = this;
+    await _t.test('Should return a newly-instantiated scope', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
       const scope = await store.loadScope('random-id');
       toBeInstanceOf(scope, Scope);
     });
 
-    it('Should not leak mappings between different scopes', async function () {
-      const {dataFactory, store} = this;
+    await _t.test('Should not leak mappings between different scopes', async () => {
+      await using ctx = await qcp.getContext();
+      const {dataFactory, store} = ctx;
       const scopeA = await store.initScope();
       const scopeB = await store.initScope();
       const quad = dataFactory.quad(
@@ -41,15 +44,16 @@ export const runScopeTests = () => {
       arrayToHaveLength(items, 2);
       const reloadedScopeA = await store.loadScope(scopeA.id);
       const reloadedScopeB = await store.loadScope(scopeB.id);
-      toNotEqualTerm(reloadedScopeA.blankNodes.get('bo'), reloadedScopeB.blankNodes.get('bo'));
+      toNotEqualTerm(reloadedScopeA.blankNodes.get('bo'), reloadedScopeB.blankNodes.get('bo')!);
     });
 
   });
 
-  describe('Quadstore.prototype.deleteScope()', () => {
+  await t.test('Quadstore.prototype.deleteScope()', async (_t) => {
 
-    it('Should delete the mappings of a given scope', async function () {
-      const {dataFactory, store} = this;
+    await _t.test('Should delete the mappings of a given scope', async () => {
+      await using ctx = await qcp.getContext();
+      const {dataFactory, store} = ctx;
       const scopeA = await store.initScope();
       const scopeB = await store.initScope();
       const quad = dataFactory.quad(
@@ -77,10 +81,11 @@ export const runScopeTests = () => {
 
   });
 
-  describe('Quadstore.prototype.deleteAllScopes()', () => {
+  await t.test('Quadstore.prototype.deleteAllScopes()', async (_t) => {
 
-    it('Should delete all scope mappings', async function () {
-      const {dataFactory, store} = this;
+    await _t.test('Should delete all scope mappings', async () => {
+      await using ctx = await qcp.getContext();
+      const {dataFactory, store} = ctx;
       const scopeA = await store.initScope();
       const scopeB = await store.initScope();
       const quad = dataFactory.quad(
@@ -101,7 +106,5 @@ export const runScopeTests = () => {
     });
 
   });
-
-
 
 };

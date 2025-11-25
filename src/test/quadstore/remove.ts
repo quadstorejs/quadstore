@@ -1,14 +1,16 @@
-
+import { TestContext } from 'node:test';
 import { ArrayIterator } from 'asynciterator';
 import { waitForEvent, streamToArray } from '../../utils/stuff.js';
 import { arrayToHaveLength } from '../utils/expect.js';
+import { QuadstoreContextProvider } from '../utils/context.js';
 
-export const runRemoveTests = () => {
+export const runRemoveTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
-  describe('Quadstore.prototype.remove()', () => {
+  await t.test('Quadstore.prototype.remove()', async (_t) => {
 
-    it('should remove streamed quads correctly', async function () {
-      const { dataFactory, store } = this;
+    await _t.test('should remove streamed quads correctly', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const importQuads = [
         dataFactory.quad(
           dataFactory.namedNode('http://ex.com/s0'),

@@ -1,17 +1,19 @@
-
-import type {Quad, Term} from '@rdfjs/types';
+import type {Quad} from '@rdfjs/types';
+import { TestContext } from 'node:test';
 import { ArrayIterator } from 'asynciterator';
 import { streamToArray } from '../../utils/stuff.js';
 import { Scope, ScopeLabelMapping } from '../../scope/index.js';
 import { arrayToHaveLength, equalsQuadArray, toBeAnArray, toBeFalse, toStrictlyEqual, toBeTrue } from '../utils/expect.js';
 import { LevelIterator } from '../../get/leveliterator.js';
+import { QuadstoreContextProvider } from '../utils/context.js';
 
-export const runPutTests = () => {
+export const runPutTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
-  describe('Quadstore.prototype.put()', () => {
+  await t.test('Quadstore.prototype.put()', async (_t) => {
 
-    it('should store a single quad', async function () {
-      const { dataFactory, store } = this;
+    await _t.test('should store a single quad', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const newQuad = dataFactory.quad(
         dataFactory.namedNode('ex://s'),
         dataFactory.namedNode('ex://p'),
@@ -23,8 +25,9 @@ export const runPutTests = () => {
       equalsQuadArray(foundQuads, [newQuad]);
     });
 
-    it('should store a single quad with a term that serializes to a string longer than 127 chars', async function () {
-      const { dataFactory, store } = this;
+    await _t.test('should store a single quad with a term that serializes to a string longer than 127 chars', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const newQuad = dataFactory.quad(
         dataFactory.namedNode('ex://s'),
         dataFactory.namedNode('ex://p'),
@@ -36,8 +39,9 @@ export const runPutTests = () => {
       equalsQuadArray(foundQuads, [newQuad]);
     });
 
-    it('should store multiple quads', async function () {
-      const { dataFactory, store } = this;
+    await _t.test('should store multiple quads', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const newQuads = [
         dataFactory.quad(
           dataFactory.namedNode('ex://s'),
@@ -58,8 +62,9 @@ export const runPutTests = () => {
       equalsQuadArray(foundQuads, newQuads);
     });
 
-    it('should not duplicate quads', async function () {
-      const { dataFactory, store } = this;
+    await _t.test('should not duplicate quads', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const newQuads = [
         dataFactory.quad(
           dataFactory.namedNode('ex://s'),
@@ -83,10 +88,11 @@ export const runPutTests = () => {
 
   });
 
-  describe('Quadstore.prototype.put() with scope', () => {
+  await t.test('Quadstore.prototype.put() with scope', async (_t) => {
 
-    it('Should transform blank node labels', async function () {
-      const {dataFactory, store} = this;
+    await _t.test('Should transform blank node labels', async () => {
+      await using ctx = await qcp.getContext();
+      const {dataFactory, store} = ctx;
       const scope = await store.initScope();
       const quadA = dataFactory.quad(
         dataFactory.namedNode('ex://s'),
@@ -102,8 +108,9 @@ export const runPutTests = () => {
       toBeTrue(quadB.graph.equals(quadA.graph));
     });
 
-    it('Should maintain mappings across different invocations', async function () {
-      const {dataFactory, store} = this;
+    await _t.test('Should maintain mappings across different invocations', async () => {
+      await using ctx = await qcp.getContext();
+      const {dataFactory, store} = ctx;
       const scope = await store.initScope();
       const quadA = dataFactory.quad(
         dataFactory.namedNode('ex://s1'),
@@ -125,8 +132,9 @@ export const runPutTests = () => {
       toBeFalse(items[1].object.equals(quadA.object));
     });
 
-    it('Should persist scope mappings', async function () {
-      const {dataFactory, store} = this;
+    await _t.test('Should persist scope mappings', async () => {
+      await using ctx = await qcp.getContext();
+      const {dataFactory, store} = ctx;
       const scope = await store.initScope();
       const quad = dataFactory.quad(
         dataFactory.namedNode('ex://s'),
@@ -148,9 +156,11 @@ export const runPutTests = () => {
 
   });
 
-  describe('Quadstore.prototype.multiPut() with scope', () => {
-    it('Should transform blank node labels', async function () {
-      const {dataFactory, store} = this;
+  await t.test('Quadstore.prototype.multiPut() with scope', async (_t) => {
+    
+    await _t.test('Should transform blank node labels', async () => {
+      await using ctx = await qcp.getContext();
+      const {dataFactory, store} = ctx;
       const scope = await store.initScope();
       const quadsA = [
         dataFactory.quad(
@@ -170,9 +180,11 @@ export const runPutTests = () => {
     });
   });
 
-  describe('Quadstore.prototype.putStream() with scope', () => {
-    it('Should transform blank node labels', async function () {
-      const {dataFactory, store} = this;
+  await t.test('Quadstore.prototype.putStream() with scope', async (_t) => {
+    
+    await _t.test('Should transform blank node labels', async () => {
+      await using ctx = await qcp.getContext();
+      const {dataFactory, store} = ctx;
       const scope = await store.initScope();
       const quadsA = [
         dataFactory.quad(
@@ -192,10 +204,10 @@ export const runPutTests = () => {
     });
   });
 
-  describe('Quadstore.prototype.putStream() with batchSize', () => {
+  await t.test('Quadstore.prototype.putStream() with batchSize', async (_t) => {
 
-    beforeEach(async function () {
-      const { dataFactory } = this;
+    const setupQuads = async (ctx: any) => {
+      const { dataFactory } = ctx;
       const quads = [];
       for (let i = 0; i < 10; i += 1) {
         quads.push(dataFactory.quad(
@@ -205,37 +217,47 @@ export const runPutTests = () => {
           dataFactory.namedNode('ex://g'),
         ));
       }
-      this.quads = quads;
-    });
+      return quads;
+    };
 
-    afterEach(async function () {
-      const { store, quads } = this;
+    const verifyQuads = async (store: any, expectedQuads: Quad[]) => {
       const { items } = await store.get({});
       items.sort((a: Quad, b: Quad) => a.object.value < b.object.value ? -1 : 1);
-      equalsQuadArray(items, quads);
-    });
+      equalsQuadArray(items, expectedQuads);
+    };
 
-    it('batchSize set to 1', async function () {
-      const { store, quads } = this;
+    await _t.test('batchSize set to 1', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
+      const quads = await setupQuads(ctx);
       await store.putStream(new ArrayIterator(quads), { batchSize: 1 });
+      await verifyQuads(store, quads);
     });
 
-    it('batchSize set to the number of quads', async function () {
-      const { store, quads } = this;
+    await _t.test('batchSize set to the number of quads', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
+      const quads = await setupQuads(ctx);
       await store.putStream(new ArrayIterator(quads), { batchSize: 10 });
+      await verifyQuads(store, quads);
     });
 
-    it('batchSize set to a perfect divisor of the number of quads', async function () {
-      const { store, quads } = this;
+    await _t.test('batchSize set to a perfect divisor of the number of quads', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
+      const quads = await setupQuads(ctx);
       await store.putStream(new ArrayIterator(quads), { batchSize: 2 });
+      await verifyQuads(store, quads);
     });
 
-    it('batchSize set to an imperfect divisor of the number of quads', async function () {
-      const { store, quads } = this;
+    await _t.test('batchSize set to an imperfect divisor of the number of quads', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
+      const quads = await setupQuads(ctx);
       await store.putStream(new ArrayIterator(quads), { batchSize: 3 });
+      await verifyQuads(store, quads);
     });
 
   });
-
 
 };

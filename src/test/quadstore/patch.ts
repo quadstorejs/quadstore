@@ -1,12 +1,14 @@
-
+import { TestContext } from 'node:test';
 import { equalsQuadArray } from '../utils/expect.js';
+import { QuadstoreContextProvider } from '../utils/context.js';
 
-export const runPatchTests = () => {
+export const runPatchTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
-  describe('Quadstore.prototype.patch()', async function () {
+  await t.test('Quadstore.prototype.patch()', async (_t) => {
 
-    it('should delete old quads and add new ones', async function () {
-      const { dataFactory, store } = this;
+    await _t.test('should delete old quads and add new ones', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const quadsArray = [
         dataFactory.quad(
           dataFactory.namedNode('ex://s'),

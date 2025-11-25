@@ -1,12 +1,16 @@
-
+import { TestContext } from 'node:test';
 import { ArrayIterator } from 'asynciterator';
 import { streamToArray, waitForEvent } from '../../utils/stuff.js';
 import { arrayToHaveLength } from '../utils/expect.js';
+import { QuadstoreContextProvider } from '../utils/context.js';
 
-export const runRemoveMatchesTests = () => {
-  describe('Quadstore.prototype.removeMatches()', () => {
-    it('should remove matching quads correctly', async function () {
-      const { dataFactory, store } = this;
+export const runRemoveMatchesTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
+
+  await t.test('Quadstore.prototype.removeMatches()', async (_t) => {
+
+    await _t.test('should remove matching quads correctly', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
       const importQuads = [
         dataFactory.quad(
           dataFactory.namedNode('http://ex.com/s0'),
@@ -29,9 +33,11 @@ export const runRemoveMatchesTests = () => {
       ];
       const importStream = new ArrayIterator(importQuads);
       await waitForEvent(store.import(importStream), 'end', true);
-      await waitForEvent(store.removeMatches(null, null, null, dataFactory.namedNode('http://ex.com/g1')), 'end', true);
+      await waitForEvent(store.removeMatches(undefined, undefined, undefined, dataFactory.namedNode('http://ex.com/g1')), 'end', true);
       const matchedQuads = await streamToArray(store.match());
       arrayToHaveLength(matchedQuads, 1);
     });
+
   });
+
 };

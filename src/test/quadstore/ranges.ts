@@ -1,15 +1,16 @@
-
+import { TestContext } from 'node:test';
 import { equalsQuadArray } from '../utils/expect.js';
+import { QuadstoreContextProvider } from '../utils/context.js';
 
-export const runRangeTests = () => {
+export const runRangeTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
-  describe('Operations with ranges', () => {
+  await t.test('Operations with ranges', async (_t) => {
 
-    describe('String literals', () => {
+    await _t.test('String literals', async (__t) => {
 
-      beforeEach(async function () {
-        const { dataFactory } = this;
-        this.quads = [
+      const setupQuads = async (ctx: any) => {
+        const { dataFactory, store } = ctx;
+        const quads = [
           dataFactory.quad(
             dataFactory.namedNode('ex://s0'),
             dataFactory.namedNode('ex://p0'),
@@ -35,95 +36,114 @@ export const runRangeTests = () => {
             dataFactory.namedNode('ex://c3'),
           ),
         ];
-        await this.store.multiPut(this.quads);
-      });
+        await store.multiPut(quads);
+        return quads;
+      };
 
-      it('should match quads by a specific string literal', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a specific string literal', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: dataFactory.literal('o2'),
         });
-        equalsQuadArray(quads, this.quads.slice(2, 3));
+        equalsQuadArray(matchedQuads, quads.slice(2, 3));
       });
 
-      it('should match quads by a range of string literals (gte)', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a range of string literals (gte)', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: { termType: 'Range', gte: dataFactory.literal('o1') },
         });
-        equalsQuadArray(quads, this.quads.slice(1));
+        equalsQuadArray(matchedQuads, quads.slice(1));
       });
 
-      it('should match quads by a range of string literals (gt)', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a range of string literals (gt)', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: { termType: 'Range', gt: dataFactory.literal('o1') },
         });
-        equalsQuadArray(quads, this.quads.slice(2));
+        equalsQuadArray(matchedQuads, quads.slice(2));
       });
 
-      it('should match quads by a range of string literals (lte)', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a range of string literals (lte)', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: { termType: 'Range', lte: dataFactory.literal('o2') },
         });
-        equalsQuadArray(quads, this.quads.slice(0, 3));
+        equalsQuadArray(matchedQuads, quads.slice(0, 3));
       });
 
-      it('should match quads by a range of string literals (lt)', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a range of string literals (lt)', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: { termType: 'Range', lt: dataFactory.literal('o2') },
         });
-        equalsQuadArray(quads, this.quads.slice(0, 2));
+        equalsQuadArray(matchedQuads, quads.slice(0, 2));
       });
 
-      it('should match quads by a range of string literals (gt,lt)', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a range of string literals (gt,lt)', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: { 
             termType: 'Range', 
             gt: dataFactory.literal('o0'),
             lt: dataFactory.literal('o3'),
            },
         });
-        equalsQuadArray(quads, this.quads.slice(1, 3));
+        equalsQuadArray(matchedQuads, quads.slice(1, 3));
       });
 
-      it('should match quads by a range of string literals (gte,lt)', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a range of string literals (gte,lt)', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: { 
             termType: 'Range', 
             gte: dataFactory.literal('o0'),
             lt: dataFactory.literal('o3'),
            },
         });
-        equalsQuadArray(quads, this.quads.slice(0, 3));
+        equalsQuadArray(matchedQuads, quads.slice(0, 3));
       });
 
-      it('should match quads by a range of string literals (gt,lte)', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a range of string literals (gt,lte)', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: { 
             termType: 'Range', 
             gt: dataFactory.literal('o0'),
             lte: dataFactory.literal('o3'),
            },
         });
-        equalsQuadArray(quads, this.quads.slice(1, 4));
+        equalsQuadArray(matchedQuads, quads.slice(1, 4));
       });
 
-      it('should match quads by a range of string literals (gte,lte)', async function () {
-        const { dataFactory, store } = this;
-        const { items: quads } = await store.get({
+      await __t.test('should match quads by a range of string literals (gte,lte)', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = await setupQuads(ctx);
+        const { items: matchedQuads } = await store.get({
           object: { 
             termType: 'Range', 
             gte: dataFactory.literal('o1'),
             lte: dataFactory.literal('o2'),
            },
         });
-        equalsQuadArray(quads, this.quads.slice(1, 3));
+        equalsQuadArray(matchedQuads, quads.slice(1, 3));
       });
 
     });
