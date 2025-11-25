@@ -28,6 +28,7 @@ import type {
   Prefixes,
   QuadArrayResultWithInternals,
   QuadStreamResultWithInternals,
+  Range,
 } from './types/index.js';
 import { ResultType } from './types/index.js';
 import type {
@@ -121,7 +122,9 @@ export class Quadstore implements Store {
     await this.db.clear();
   }
 
-  match(subject?: Quad_Subject, predicate?: Quad_Predicate, object?: Quad_Object, graph?: Quad_Graph, opts: GetOpts = emptyObject): AsyncIterator<Quad> {
+  match(subject?: Quad_Subject, predicate?: Quad_Predicate, object?: Quad_Object, graph?: Quad_Graph, opts?: GetOpts): AsyncIterator<Quad>;
+  match(subject?: Quad_Subject, predicate?: Quad_Predicate, object?: Range, graph?: Quad_Graph, opts?: GetOpts): AsyncIterator<Quad>;
+  match(subject?: Quad_Subject, predicate?: Quad_Predicate, object?: Quad_Object | Range, graph?: Quad_Graph, opts: GetOpts = emptyObject): AsyncIterator<Quad> {
     // This is required due to the fact that Comunica may invoke the `.match()`
     // method in generalized RDF mode, under which the subject may be a literal
     // term.

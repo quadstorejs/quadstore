@@ -20,7 +20,7 @@ export const runQuadstoreTests = async (t: TestContext, qcp: QuadstoreContextPro
   // await runPutTests(t, qcp);
   // await runScopeTests(t, qcp);
   // await runPatchTests(t, qcp);
-  // await runMatchTests(t, qcp);
+  await runMatchTests(t, qcp);
   // await runRangeTests(t, qcp);
   await runImportTests(t, qcp);
   // await runRemoveTests(t, qcp);

@@ -3,15 +3,19 @@
 import { ArrayIterator }  from 'asynciterator';
 import { waitForEvent, streamToArray }  from '../../utils/stuff.js';
 import { arrayToHaveLength, equalsQuadArray } from '../utils/expect.js';
+import { TestContext } from 'node:test';
+import { QuadstoreContextProvider } from '../utils/context.js';
+import { Range } from '../../types/index.js';
 
-export const runMatchTests = () => {
+export const runMatchTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
-  describe('Quadstore.prototype.match()', () => {
+  await t.test('Quadstore.prototype.match()', async (_t) => {
 
-    describe('Match by value', () => {
+    await _t.test('Match by value', async (__t) => {
 
-      it('should match quads by subject', async function () {
-        const { dataFactory, store } = this;
+      await __t.test('should match quads by subject', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
         const quads = [
           dataFactory.quad(
             dataFactory.namedNode('http://ex.com/s'),
@@ -30,12 +34,12 @@ export const runMatchTests = () => {
         await waitForEvent(store.import(source), 'end', true);
         const subject = dataFactory.namedNode('http://ex.com/s2');
         const matchedQuads = await streamToArray(store.match(subject));
-
         equalsQuadArray(matchedQuads, [quads[1]]);
       });
 
-      it('should match quads by predicate',  async function () {
-        const { dataFactory, store } = this;
+      await __t.test('should match quads by predicate',  async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
         const quads = [
           dataFactory.quad(
             dataFactory.namedNode('http://ex.com/s'),
@@ -53,13 +57,14 @@ export const runMatchTests = () => {
         const source = new ArrayIterator(quads);
         await waitForEvent(store.import(source), 'end', true);
         const predicate = dataFactory.namedNode('http://ex.com/p2');
-        const matchedQuads = await streamToArray(store.match(null, predicate));
+        const matchedQuads = await streamToArray(store.match(undefined, predicate));
 
         equalsQuadArray(matchedQuads, [quads[1]]);
       });
 
-      it('should match quads by object',  async function () {
-        const { dataFactory, store } = this;
+      await __t.test('should match quads by object',  async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
         const quads = [
           dataFactory.quad(
             dataFactory.namedNode('http://ex.com/s'),
@@ -77,13 +82,14 @@ export const runMatchTests = () => {
         const source = new ArrayIterator(quads);
         await waitForEvent(store.import(source), 'end', true);
         const object = dataFactory.literal('o', 'en-gb');
-        const matchedQuads = await streamToArray(store.match(null, null, object));
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, object));
 
         equalsQuadArray(matchedQuads, [quads[0]]);
       });
 
-      it('should match quads by graph',  async function () {
-        const { dataFactory, store } = this;
+      await __t.test('should match quads by graph',  async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
         const quads = [
           dataFactory.quad(
             dataFactory.namedNode('http://ex.com/s'),
@@ -101,13 +107,14 @@ export const runMatchTests = () => {
         const source = new ArrayIterator(quads);
         await waitForEvent(store.import(source), 'end', true);
         const graph = dataFactory.namedNode('http://ex.com/g2');
-        const matchedQuads = await streamToArray(store.match(null, null, null, graph));
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, undefined, graph));
 
         equalsQuadArray(matchedQuads, [quads[1]]);
       });
 
-      it('should match the default graph when explicitly passed',  async function () {
-        const { dataFactory, store } = this;
+      await __t.test('should match the default graph when explicitly passed',  async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
         const quads = [
           dataFactory.quad(
             dataFactory.namedNode('http://ex.com/s0'),
@@ -124,17 +131,18 @@ export const runMatchTests = () => {
         ];
         const source = new ArrayIterator(quads);
         await waitForEvent(store.import(source), 'end', true);
-        const matchedQuads = await streamToArray(store.match(null, null, null, dataFactory.defaultGraph()));
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, undefined, dataFactory.defaultGraph()));
 
         equalsQuadArray(matchedQuads, [quads[0]]);
       });
 
     });
 
-    describe('Match by range', () => {
+    await _t.test('Match by range', async (__t) => {
 
-      it('should match quads by object (literal) [GT]', async function () {
-        const { dataFactory, store } = this;
+      await __t.test('should match quads by object (literal) [GT]', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
         const quads = [
           dataFactory.quad(
             dataFactory.namedNode('http://ex.com/s'),
@@ -151,15 +159,18 @@ export const runMatchTests = () => {
         ];
         const source = new ArrayIterator(quads);
         await waitForEvent(store.import(source), 'end', true);
-        const match = { termType: 'Range',
-          gt: dataFactory.literal('6', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')) };
-        const matchedQuads = await streamToArray(store.match(null, null, match, null));
+        const match: Range = {
+          termType: 'Range',
+          gt: dataFactory.literal('6', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')),
+        };
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
 
         equalsQuadArray(matchedQuads, [quads[1]]);
       });
 
-      it('should match quads by object (literal) [GTE]', async function () {
-        const { dataFactory, store } = this;
+      await __t.test('should match quads by object (literal) [GTE]', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
         const quads = [
           dataFactory.quad(
             dataFactory.namedNode('http://ex.com/s'),
@@ -176,15 +187,16 @@ export const runMatchTests = () => {
         ];
         const source = new ArrayIterator(quads);
         await waitForEvent(store.import(source), 'end', true);
-        const match = { termType: 'Range',
+        const match: Range = { termType: 'Range',
           gte: dataFactory.literal('7.0', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#double')) };
-        const matchedQuads = await streamToArray(store.match(null, null, match, null));
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
 
         equalsQuadArray(matchedQuads, [quads[1]]);
       });
 
-      it('should not match quads by object (literal) if out of range [GT]', async function () {
-        const { dataFactory, store } = this;
+      await __t.test('should not match quads by object (literal) if out of range [GT]', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
         const quads = [
           dataFactory.quad(
             dataFactory.namedNode('http://ex.com/s'),
@@ -201,11 +213,11 @@ export const runMatchTests = () => {
         ];
         const source = new ArrayIterator(quads);
         await waitForEvent(store.import(source), 'end', true);
-        const match = {
+        const match: Range = {
           termType: 'Range',
           gt: dataFactory.literal('7.0', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#double')),
         };
-        const matchedQuads = await streamToArray(store.match(null, null, match, null));
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
         arrayToHaveLength(matchedQuads, 0);
       });
     });
