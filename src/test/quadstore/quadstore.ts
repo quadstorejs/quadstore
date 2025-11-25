@@ -15,7 +15,7 @@ import { TestContext } from 'node:test';
 import { QuadstoreContextProvider } from '../utils/context';
 
 export const runQuadstoreTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
-  // await runGetTests(t, qcp);
+  await runGetTests(t, qcp);
   await runDelTests(t, qcp);
   // await runPutTests(t, qcp);
   // await runScopeTests(t, qcp);
