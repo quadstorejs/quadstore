@@ -27,7 +27,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "watch": "npm run clean && tsc --watch",
-    "test": "cd test && mocha node.js --reporter spec",
+    "test": "cd dist/test && mocha node.js --reporter spec",
     "build": "npm run clean && tsc -p tsconfig.json",
     "publish:alpha": "npm run build && npm publish --tag alpha",
     "publish:beta": "npm run build && npm publish --tag beta"
