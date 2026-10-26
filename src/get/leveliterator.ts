@@ -15,6 +15,7 @@ export class LevelIterator<K, V, T> extends AsyncIterator<T> {
   #currbuf: [K, V][] | null;
   #curridx: number;
   #loading: boolean;
+  #sourceClosed: boolean;
 
   constructor(source: AbstractIterator<any, K, V>, mapper: MappingFn<[K, V], T>, maxBufferSize: number = 256) {
     super();
@@ -26,6 +27,7 @@ export class LevelIterator<K, V, T> extends AsyncIterator<T> {
     this.#nextbuf = null;
     this.#curridx = 0;
     this.#loading = false;
+    this.#sourceClosed = false;
     this.readable = false;
     queueMicrotask(this.#loadNextBuffer);
   }
@@ -56,7 +58,7 @@ export class LevelIterator<K, V, T> extends AsyncIterator<T> {
   }
   
   #loadNextBuffer = () => {
-    if (!this.#loading && !this.#nextbuf) {
+    if (!this.#loading && !this.#nextbuf && !this.done) {
       this.#loading = true;
       this.#source.nextv(this.#bufsize)
         .then(this.#onNextBuffer)
@@ -83,6 +85,14 @@ export class LevelIterator<K, V, T> extends AsyncIterator<T> {
     this.#sourceEnded = true;
     if (!this.#currbuf) { 
       this.close();
+    }
+  }
+
+  protected _end(destroy?: boolean): void {
+    super._end(destroy);
+    if (!this.#sourceClosed) {
+      this.#sourceClosed = true;
+      this.#source.close().catch(() => {});
     }
   }
 

@@ -10,6 +10,7 @@ import { runMatchTests } from './match.js';
 import { runScopeTests } from './scope.js';
 import { runPutTests } from './put.js';
 import { runRangeTests } from './ranges.js';
+import { runIteratorTests } from './iterators.js';
 import { TestContext } from 'node:test';
 import { QuadstoreContextProvider } from '../utils/context';
 
@@ -21,6 +22,7 @@ export const runQuadstoreTests = async (t: TestContext, qcp: QuadstoreContextPro
   await runPatchTests(t, qcp);
   await runMatchTests(t, qcp);
   await runRangeTests(t, qcp);
+  await runIteratorTests(t, qcp);
   await runImportTests(t, qcp);
   await runRemoveTests(t, qcp);
   await runRemoveMatchesTests(t, qcp);
