@@ -42,13 +42,13 @@
     "url": "https://github.com/quadstorejs/quadstore.git"
   },
   "devDependencies": {
-    "@types/chai": "^5.2.2",
-    "@types/node": "^24.8.1",
-    "chai": "^6.2.0",
+    "@types/chai": "^5.2.3",
+    "@types/node": "^26.6.6",
+    "chai": "^6.3.0",
     "classic-level": "^3.0.0",
     "memory-level": "^3.1.0",
-    "rdf-data-factory": "^2.0.2",
-    "typescript": "^5.9.3"
+    "rdf-data-factory": "^2.1.0",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "@rdfjs/types": "^2.0.1",
