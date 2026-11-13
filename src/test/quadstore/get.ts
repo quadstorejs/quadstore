@@ -125,6 +125,24 @@ export const runGetTests = async (t: TestContext, qcp: QuadstoreContextProvider)
       equalsQuadArray(quads, [stored[6]]);
     });
 
+    await _t.test('should distinguish language-tagged strings by base direction', async () => {
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+      const s = dataFactory.namedNode('ex://s');
+      const p = dataFactory.namedNode('ex://p');
+      const plain = dataFactory.literal('Hello', 'en');
+      const ltr = dataFactory.literal('Hello', { language: 'en', direction: 'ltr' });
+      const rtl = dataFactory.literal('Hello', { language: 'en', direction: 'rtl' });
+      const quads = [plain, ltr, rtl].map(o => dataFactory.quad(s, p, o, dataFactory.defaultGraph()));
+      await store.multiPut(quads);
+      for (let i = 0; i < quads.length; i += 1) {
+        const { items } = await store.get({ object: quads[i].object });
+        equalsQuadArray(items, [quads[i]]);
+      }
+      const { items: all } = await store.get({ subject: s });
+      toStrictlyEqual(all.length, 3);
+    });
+
     await _t.test('should match quads by graph', async () => {
       await using ctx = await qcp.getContext();
       const { dataFactory, store } = ctx;

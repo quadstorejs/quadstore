@@ -81,10 +81,24 @@ export const stringLiteralReader: TermReader<Literal> = {
   },
 };
 
+// RDF 1.2 directional language-tagged strings store their language tag and
+// base direction together in the language slot, joined by `--` as in the
+// N-Triples 1.2 syntax (`"value"@en--ltr`). BCP47 tags never contain `--`, so
+// the split is unambiguous, and `"a"@en` and `"a"@en--ltr` never share a key
+// prefix because the separator always follows the language slot.
+export const DIRECTION_SEPARATOR = '--';
+
+const getLanguageSlot = (node: Literal): string => {
+  return node.direction
+    ? node.language + DIRECTION_SEPARATOR + node.direction
+    : node.language;
+};
+
 export const langStringLiteralWriter: TermWriter<Literal, 'F'> = {
   write(node: Literal, serialized: SerializedTerm) {
-    serialized.lengths = encodeTermLength(node.value.length) + encodeTermLength(node.language.length);
-    serialized.value = node.language + separator + node.value;
+    const language = getLanguageSlot(node);
+    serialized.lengths = encodeTermLength(node.value.length) + encodeTermLength(language.length);
+    serialized.value = language + separator + node.value;
   },
 };
 
@@ -98,6 +112,25 @@ export const langStringLiteralReader: TermReader<Literal> = {
     return factory.literal(
       sliceString(key, keyOffset + langCodeLen + separator.length, valueLen),
       sliceString(key, keyOffset, langCodeLen),
+    );
+  },
+}
+
+export const dirLangStringLiteralReader: TermReader<Literal> = {
+  read(key: string, state: ReadingState, factory: DataFactory, prefixes: Prefixes): Literal {
+    const { keyOffset, lengthsOffset } = state;
+    const valueLen = decodeTermLength(sliceString(key, lengthsOffset, LENGTH_OF_ENCODED_TERM_LENGTH));
+    const langSlotLen = decodeTermLength(sliceString(key, lengthsOffset + LENGTH_OF_ENCODED_TERM_LENGTH, LENGTH_OF_ENCODED_TERM_LENGTH));
+    state.lengthsOffset += LENGTH_OF_ENCODED_TERM_LENGTH * 2;
+    state.keyOffset += valueLen + langSlotLen + separator.length;
+    const langSlot = sliceString(key, keyOffset, langSlotLen);
+    const dirSepIndex = langSlot.lastIndexOf(DIRECTION_SEPARATOR);
+    return factory.literal(
+      sliceString(key, keyOffset + langSlotLen + separator.length, valueLen),
+      {
+        language: langSlot.slice(0, dirSepIndex),
+        direction: langSlot.slice(dirSepIndex + DIRECTION_SEPARATOR.length) as 'ltr' | 'rtl',
+      },
     );
   },
 }
@@ -159,7 +192,10 @@ export const termWriter: TermWriter<Term, 'F'> = {
         defaultGraphWriter.write(term, serialized, prefixes);
         break;
       case 'Literal':
-        if (term.language) {
+        if (term.language && term.direction) {
+          serialized.type = '8';
+          langStringLiteralWriter.write(term, serialized, prefixes);
+        } else if (term.language) {
           serialized.type = '4';
           langStringLiteralWriter.write(term, serialized, prefixes);
         } else if (term.datatype) {
@@ -232,6 +268,9 @@ export const termReader: TermReader<Term> = {
         break;
       case '7':
         termValue = numericLiteralReader.read(key, state, factory, prefixes);
+        break;
+      case '8':
+        termValue = dirLangStringLiteralReader.read(key, state, factory, prefixes);
         break;
       default: throw new Error(`Unexpected encoded term type "${encodedTermType}"`);
     }
