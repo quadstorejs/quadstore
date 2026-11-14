@@ -7,6 +7,30 @@ export const runFpstringTests = async (t: TestContext) => {
 
   await t.test('Floating-point serialization', async (_t) => {
 
+    await _t.test('should handle xsd:float INF value', async () => {
+      toStrictlyEqual(encode('INF'), '60000.00000000000000000');
+    });
+
+    await _t.test('should handle xsd:float -INF value', async () => {
+      toStrictlyEqual(encode('-INF'), '00000.00000000000000000');
+    });
+
+    await _t.test('should handle xsd:float NaN value', async () => {
+      toStrictlyEqual(encode('NaN'), '70000.00000000000000000');
+    });
+
+    await _t.test('should handle javascript\'s Infinity', async () => {
+      toStrictlyEqual(encode(Infinity), '60000.00000000000000000');
+    });
+
+    await _t.test('should handle javascript\'s -Infinity', async () => {
+      toStrictlyEqual(encode(-Infinity), '00000.00000000000000000');
+    });
+
+    await _t.test('should handle javascript\'s  NaN', async () => {
+      toStrictlyEqual(encode(NaN), '70000.00000000000000000');
+    });
+
     await _t.test('should produce strings whose lexicographical sorting matches the natural sorting of the original values', async () => {
 
       const values = [
@@ -35,18 +59,20 @@ export const runFpstringTests = async (t: TestContext) => {
         100,
         123.123,
         123123,
-        Infinity
+        Infinity,
+        'notanumber',
       ];
 
       const shuffled = [
         0,
         123.123,
-        -100,
         100,
-        10,
         -10,
+        10,
+        -100,
         -123.123,
         0.2123,
+        'notanumber',
         -9.1,
         -1,
         0.123,
@@ -67,7 +93,7 @@ export const runFpstringTests = async (t: TestContext) => {
         1.23,
       ];
 
-      const pairs: [number, string][] = shuffled.map(n => [n, encode(n)]);
+      const pairs: [number | string, string][] = shuffled.map(n => [n, encode(n)]);
       pairs.sort((p1, p2) => p1[1] < p2[1] ? -1 : 1);
 
       pairs.forEach((p, i) => {
