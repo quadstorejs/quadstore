@@ -1,5 +1,6 @@
 
 import type { Prefixes, ReadingState, SerializedTerm, TermReader, TermWriter } from '../types/index.js';
+import { SerializedTermType } from '../types/index.js';
 import type { BaseQuad, BlankNode, DataFactory, DefaultGraph, Literal, NamedNode, Quad, Quad_Object, Quad_Predicate, Quad_Subject } from '@rdfjs/types';
 
 import * as xsd from './xsd.js';
@@ -177,23 +178,28 @@ export const defaultGraphReader: TermReader<DefaultGraph> = {
 };
 
 // RDF 1.2 triple terms are serialized inline: the marker followed by the
-// values of their subject, predicate and object joined by the separator, with
-// the type and lengths of each nested term appended to the lengths section in
-// the same order. This recurses naturally for nested triple terms.
+// type-prefixed values of their subject, predicate and object joined by the
+// separator, with the lengths of each nested term appended to the lengths
+// section in the same order. This recurses naturally for nested triple terms,
+// as termReader reads the type of each nested term from the front of its value.
 export const tripleTermWriter: TermWriter<BaseQuad, 'F'> = {
   write(node: BaseQuad, serialized: SerializedTerm, prefixes: Prefixes) {
     if (node.graph.termType !== 'DefaultGraph') {
       throw new Error('Triple terms must be in the default graph');
     }
     // Fresh scratch objects on each call as the writer is re-entrant.
-    const s: SerializedTerm = { type: '', value: '', lengths: '' };
-    const p: SerializedTerm = { type: '', value: '', lengths: '' };
-    const o: SerializedTerm = { type: '', value: '', lengths: '' };
+    // Type placeholders are overwritten by termWriter.write().
+    const s: SerializedTerm = { type: SerializedTermType.NAMED_NODE, value: '', lengths: '' };
+    const p: SerializedTerm = { type: SerializedTermType.NAMED_NODE, value: '', lengths: '' };
+    const o: SerializedTerm = { type: SerializedTermType.NAMED_NODE, value: '', lengths: '' };
     termWriter.write(node.subject, s, prefixes);
     termWriter.write(node.predicate, p, prefixes);
     termWriter.write(node.object, o, prefixes);
-    serialized.value = tripleTermMarker + s.value + separator + p.value + separator + o.value;
-    serialized.lengths = s.type + s.lengths + p.type + p.lengths + o.type + o.lengths;
+    serialized.value = tripleTermMarker
+      + s.type + s.value + separator
+      + p.type + p.value + separator
+      + o.type + o.value;
+    serialized.lengths = s.lengths + p.lengths + o.lengths;
   },
 };
 
@@ -209,36 +215,43 @@ export const tripleTermReader: TermReader<Quad> = {
   },
 };
 
-export const termWriter: TermWriter<Term, 'F'> = {
-  write(term: Term, serialized: SerializedTerm, prefixes: Prefixes) {
+/**
+ * Serializes a term of any type. The single-character term type written to
+ * `serialized.type` is meant to be placed in front of `serialized.value`
+ * within keys so that terms of different types never interleave in the
+ * lexicographical ordering of keys. In `rangeMode`, numeric and dateTime
+ * literals are serialized to their order-preserving encoded value only.
+ */
+export const termWriter = {
+  write(term: Term, serialized: SerializedTerm, prefixes: Prefixes, rangeMode: boolean = false) {
     switch (term.termType) {
       case 'Quad':
-        serialized.type = '9';
+        serialized.type = SerializedTermType.TRIPLE_TERM;
         tripleTermWriter.write(term, serialized, prefixes);
         break;
       case 'NamedNode':
-        serialized.type = '0';
+        serialized.type = SerializedTermType.NAMED_NODE;
         namedNodeWriter.write(term, serialized, prefixes);
         break;
       case 'BlankNode':
-        serialized.type = '1';
+        serialized.type = SerializedTermType.BLANK_NODE;
         blankNodeWriter.write(term, serialized, prefixes);
         break;
       case 'DefaultGraph':
-        serialized.type = '6';
+        serialized.type = SerializedTermType.DEFAULT_GRAPH;
         defaultGraphWriter.write(term, serialized, prefixes);
         break;
       case 'Literal':
         if (term.language && term.direction) {
-          serialized.type = '8';
+          serialized.type = SerializedTermType.DIR_LANG_STRING_LITERAL;
           langStringLiteralWriter.write(term, serialized, prefixes);
         } else if (term.language) {
-          serialized.type = '4';
+          serialized.type = SerializedTermType.LANG_STRING_LITERAL;
           langStringLiteralWriter.write(term, serialized, prefixes);
         } else if (term.datatype) {
           switch (term.datatype.value) {
             case xsd.string:
-              serialized.type = '3';
+              serialized.type = SerializedTermType.STRING_LITERAL;
               stringLiteralWriter.write(term, serialized, prefixes);
               break;
             case xsd.integer:
@@ -257,19 +270,19 @@ export const termWriter: TermWriter<Term, 'F'> = {
             case xsd.unsignedShort:
             case xsd.unsignedByte:
             case xsd.positiveInteger:
-              serialized.type = '5';
-              numericLiteralWriter.write(term, serialized, prefixes, false, encode(term.value));
+              serialized.type = SerializedTermType.NUMERIC_LITERAL;
+              numericLiteralWriter.write(term, serialized, prefixes, rangeMode, encode(term.value));
               break;
             case xsd.dateTime:
-              serialized.type = '7';
-              numericLiteralWriter.write(term, serialized, prefixes, false, encode(new Date(term.value).valueOf()));
+              serialized.type = SerializedTermType.DATETIME_LITERAL;
+              numericLiteralWriter.write(term, serialized, prefixes, rangeMode, encode(new Date(term.value).valueOf()));
               break;
             default:
-              serialized.type = '2';
+              serialized.type = SerializedTermType.GENERIC_LITERAL;
               genericLiteralWriter.write(term, serialized, prefixes);
           }
         } else {
-          serialized.type = '3';
+          serialized.type = SerializedTermType.STRING_LITERAL;
           stringLiteralWriter.write(term, serialized, prefixes);
         }
         break;
@@ -282,37 +295,37 @@ export const termWriter: TermWriter<Term, 'F'> = {
 export const termReader: TermReader<Term> = {
   read(key: string, state: ReadingState, factory: DataFactory, prefixes: Prefixes) {
     let termValue;
-    const encodedTermType = key.charAt(state.lengthsOffset);
-    state.lengthsOffset += 1;
+    const encodedTermType = key.charAt(state.keyOffset) as SerializedTermType;
+    state.keyOffset += 1;
     switch (encodedTermType) {
-      case '0':
+      case SerializedTermType.NAMED_NODE:
         termValue = namedNodeReader.read(key, state, factory, prefixes);
         break;
-      case '1':
+      case SerializedTermType.BLANK_NODE:
         termValue = blankNodeReader.read(key, state, factory, prefixes);
         break;
-      case '2':
+      case SerializedTermType.GENERIC_LITERAL:
         termValue = genericLiteralReader.read(key, state, factory, prefixes);
         break;
-      case '3':
+      case SerializedTermType.STRING_LITERAL:
         termValue = stringLiteralReader.read(key, state, factory, prefixes);
         break;
-      case '4':
+      case SerializedTermType.LANG_STRING_LITERAL:
         termValue = langStringLiteralReader.read(key, state, factory, prefixes);
         break;
-      case '5':
+      case SerializedTermType.NUMERIC_LITERAL:
         termValue = numericLiteralReader.read(key, state, factory, prefixes);
         break;
-      case '6':
+      case SerializedTermType.DEFAULT_GRAPH:
         termValue = defaultGraphReader.read(key, state, factory, prefixes);
         break;
-      case '7':
+      case SerializedTermType.DATETIME_LITERAL:
         termValue = numericLiteralReader.read(key, state, factory, prefixes);
         break;
-      case '8':
+      case SerializedTermType.DIR_LANG_STRING_LITERAL:
         termValue = dirLangStringLiteralReader.read(key, state, factory, prefixes);
         break;
-      case '9':
+      case SerializedTermType.TRIPLE_TERM:
         termValue = tripleTermReader.read(key, state, factory, prefixes);
         break;
       default: throw new Error(`Unexpected encoded term type "${encodedTermType}"`);
