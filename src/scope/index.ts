@@ -86,6 +86,8 @@ export class Scope {
     switch (node.termType) {
       case 'BlankNode':
         return this.parseBlankNode(node, batch);
+      case 'Quad':
+        return this.parseTripleTerm(node, batch);
       default:
         return node;
     }
@@ -95,6 +97,8 @@ export class Scope {
     switch (node.termType) {
       case 'BlankNode':
         return this.parseBlankNode(node, batch);
+      case 'Quad':
+        return this.parseTripleTerm(node, batch);
       default:
         return node;
     }
@@ -107,6 +111,15 @@ export class Scope {
       default:
         return node;
     }
+  }
+
+  private parseTripleTerm(node: Quad, batch: AbstractChainedBatch<any, any, any>): Quad {
+    return this.factory.quad(
+      this.parseSubject(node.subject, batch),
+      node.predicate,
+      this.parseObject(node.object, batch),
+      node.graph,
+    );
   }
 
   parseQuad(quad: Quad, batch: AbstractChainedBatch<any, any, any>): Quad {

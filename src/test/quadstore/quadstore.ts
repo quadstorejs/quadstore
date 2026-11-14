@@ -8,6 +8,7 @@ import { runRemoveMatchesTests } from './removematches.js';
 import { runPatchTests } from './patch.js';
 import { runMatchTests } from './match.js';
 import { runScopeTests } from './scope.js';
+import { runTripleTermTests } from './tripleterms.js';
 import { runPutTests } from './put.js';
 import { runRangeTests } from './ranges.js';
 import { runIteratorTests } from './iterators.js';
@@ -28,4 +29,5 @@ export const runQuadstoreTests = async (t: TestContext, qcp: QuadstoreContextPro
   await runRemoveMatchesTests(t, qcp);
   await runPrewriteTests(t, qcp);
   await runSerializationTests(t, qcp);
+  await runTripleTermTests(t, qcp);
 };

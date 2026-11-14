@@ -1,11 +1,11 @@
 
 import type { Prefixes, ReadingState, SerializedTerm, TermReader, TermWriter } from '../types/index.js';
-import type { BlankNode, DataFactory, DefaultGraph, Literal, NamedNode } from '@rdfjs/types';
+import type { BaseQuad, BlankNode, DataFactory, DefaultGraph, Literal, NamedNode, Quad, Quad_Object, Quad_Predicate, Quad_Subject } from '@rdfjs/types';
 
 import * as xsd from './xsd.js';
 import { encodeTermLength, decodeTermLength, LENGTH_OF_ENCODED_TERM_LENGTH, sliceString } from './utils.js';
 import {Term} from '@rdfjs/types';
-import {separator} from '../utils/constants.js';
+import {separator, tripleTermMarker} from '../utils/constants.js';
 import {encode} from './fpstring.js';
 
 export const namedNodeWriter: TermWriter<NamedNode, 'F'> = {
@@ -176,9 +176,46 @@ export const defaultGraphReader: TermReader<DefaultGraph> = {
   },
 };
 
+// RDF 1.2 triple terms are serialized inline: the marker followed by the
+// values of their subject, predicate and object joined by the separator, with
+// the type and lengths of each nested term appended to the lengths section in
+// the same order. This recurses naturally for nested triple terms.
+export const tripleTermWriter: TermWriter<BaseQuad, 'F'> = {
+  write(node: BaseQuad, serialized: SerializedTerm, prefixes: Prefixes) {
+    if (node.graph.termType !== 'DefaultGraph') {
+      throw new Error('Triple terms must be in the default graph');
+    }
+    // Fresh scratch objects on each call as the writer is re-entrant.
+    const s: SerializedTerm = { type: '', value: '', lengths: '' };
+    const p: SerializedTerm = { type: '', value: '', lengths: '' };
+    const o: SerializedTerm = { type: '', value: '', lengths: '' };
+    termWriter.write(node.subject, s, prefixes);
+    termWriter.write(node.predicate, p, prefixes);
+    termWriter.write(node.object, o, prefixes);
+    serialized.value = tripleTermMarker + s.value + separator + p.value + separator + o.value;
+    serialized.lengths = s.type + s.lengths + p.type + p.lengths + o.type + o.lengths;
+  },
+};
+
+export const tripleTermReader: TermReader<Quad> = {
+  read(key: string, state: ReadingState, factory: DataFactory, prefixes: Prefixes): Quad {
+    state.keyOffset += tripleTermMarker.length;
+    const subject = termReader.read(key, state, factory, prefixes) as Quad_Subject;
+    state.keyOffset += separator.length;
+    const predicate = termReader.read(key, state, factory, prefixes) as Quad_Predicate;
+    state.keyOffset += separator.length;
+    const object = termReader.read(key, state, factory, prefixes) as Quad_Object;
+    return factory.quad(subject, predicate, object, factory.defaultGraph());
+  },
+};
+
 export const termWriter: TermWriter<Term, 'F'> = {
   write(term: Term, serialized: SerializedTerm, prefixes: Prefixes) {
     switch (term.termType) {
+      case 'Quad':
+        serialized.type = '9';
+        tripleTermWriter.write(term, serialized, prefixes);
+        break;
       case 'NamedNode':
         serialized.type = '0';
         namedNodeWriter.write(term, serialized, prefixes);
@@ -235,6 +272,9 @@ export const termWriter: TermWriter<Term, 'F'> = {
           serialized.type = '3';
           stringLiteralWriter.write(term, serialized, prefixes);
         }
+        break;
+      default:
+        throw new Error(`Unsupported term type ${term.termType}`);
     }
   }
 };
@@ -271,6 +311,9 @@ export const termReader: TermReader<Term> = {
         break;
       case '8':
         termValue = dirLangStringLiteralReader.read(key, state, factory, prefixes);
+        break;
+      case '9':
+        termValue = tripleTermReader.read(key, state, factory, prefixes);
         break;
       default: throw new Error(`Unexpected encoded term type "${encodedTermType}"`);
     }
