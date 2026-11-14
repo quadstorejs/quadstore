@@ -220,6 +220,100 @@ export const runMatchTests = async (t: TestContext, qcp: QuadstoreContextProvide
         const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
         arrayToHaveLength(matchedQuads, 0);
       });
+
+      await __t.test('should match [GT] a numeric value above xsd:float -INF', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = [
+          dataFactory.quad(
+            dataFactory.namedNode('http://ex.com/s'),
+            dataFactory.namedNode('http://ex.com/p'),
+            dataFactory.literal('-INF', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+            dataFactory.namedNode('http://ex.com/g')
+          ),
+          dataFactory.quad(
+            dataFactory.namedNode('http://ex.com/s2'),
+            dataFactory.namedNode('http://ex.com/p'),
+            dataFactory.literal('-117', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')),
+            dataFactory.namedNode('http://ex.com/g')
+          )
+        ];
+        const source = new ArrayIterator(quads);
+        await waitForEvent(store.import(source), 'end', true);
+        const match: Range = {
+          termType: 'Range',
+          gt: dataFactory.literal('-INF', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+        };
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
+        equalsQuadArray(matchedQuads, [quads[1]]);
+      });
+
+      await __t.test('should match [LT] a numeric value below xsd:float INF', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = [
+          dataFactory.quad(
+            dataFactory.namedNode('http://ex.com/s'),
+            dataFactory.namedNode('http://ex.com/p'),
+            dataFactory.literal('INF', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+            dataFactory.namedNode('http://ex.com/g')
+          ),
+          dataFactory.quad(
+            dataFactory.namedNode('http://ex.com/s2'),
+            dataFactory.namedNode('http://ex.com/p'),
+            dataFactory.literal('117', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')),
+            dataFactory.namedNode('http://ex.com/g')
+          )
+        ];
+        const source = new ArrayIterator(quads);
+        await waitForEvent(store.import(source), 'end', true);
+        const match: Range = {
+          termType: 'Range',
+          lt: dataFactory.literal('INF', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+        };
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
+        equalsQuadArray(matchedQuads, [quads[1]]);
+      });
+
+      await __t.test('should not match [GT,LT] NaN as a numerical value between xsd:float INF and -INF', async () => {
+        await using ctx = await qcp.getContext();
+        const { dataFactory, store } = ctx;
+        const quads = [
+          dataFactory.quad(
+            dataFactory.namedNode('http://ex.com/s1'),
+            dataFactory.namedNode('http://ex.com/p'),
+            dataFactory.literal('INF', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+            dataFactory.namedNode('http://ex.com/g')
+          ),
+          dataFactory.quad(
+            dataFactory.namedNode('http://ex.com/s2'),
+            dataFactory.namedNode('http://ex.com/p'),
+            dataFactory.literal('-INF', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+            dataFactory.namedNode('http://ex.com/g')
+          ),
+          dataFactory.quad(
+            dataFactory.namedNode('http://ex.com/s3'),
+            dataFactory.namedNode('http://ex.com/p'),
+            dataFactory.literal('NaN', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+            dataFactory.namedNode('http://ex.com/g')
+          ),
+          dataFactory.quad(
+            dataFactory.namedNode('http://ex.com/s4'),
+            dataFactory.namedNode('http://ex.com/p'),
+            dataFactory.literal('117', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#integer')),
+            dataFactory.namedNode('http://ex.com/g')
+          )
+        ];
+        const source = new ArrayIterator(quads);
+        await waitForEvent(store.import(source), 'end', true);
+        const match: Range = {
+          termType: 'Range',
+          lt: dataFactory.literal('INF', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+          gt: dataFactory.literal('-INF', dataFactory.namedNode('http://www.w3.org/2001/XMLSchema#float')),
+        };
+        const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
+        equalsQuadArray(matchedQuads, [quads[3]]);
+      });
     });
 
   });

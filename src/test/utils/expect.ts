@@ -52,8 +52,8 @@ export const toBeLessThanOrEqualTo = (value: any, compare: number) => {
   expect(value).not.to.be.greaterThan(compare);
 };
 
-export const toStrictlyEqual = (value: any, compare: any) => {
-  expect(value).to.equal(compare);
+export const toStrictlyEqual = (value: any, compare: any, message?: string | undefined) => {
+  expect(value).to.equal(compare, message);
 };
 
 export const toBeAQuadArray = (value: any, length?: number) => {
@@ -107,7 +107,7 @@ export const toEqualQuad = (value: any, expected: Quad) => {
 
 export const equalsQuadArray = (value: any, expected: Quad[]) => {
   toBeAnArray(value);
-  toStrictlyEqual(value.length, expected.length);
+  toStrictlyEqual(value.length, expected.length, `array length mismatch`);
   for (let i = 0, l = expected.length; i < l; i += 1) {
     toEqualQuad(value[i], expected[i]);
   }
