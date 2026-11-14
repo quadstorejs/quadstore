@@ -4,7 +4,7 @@ import { SerializedTermType } from '../types/index.js';
 import type { BaseQuad, BlankNode, DataFactory, DefaultGraph, Literal, NamedNode, Quad, Quad_Object, Quad_Predicate, Quad_Subject } from '@rdfjs/types';
 
 import * as xsd from './xsd.js';
-import { encodeTermLength, decodeTermLength, LENGTH_OF_ENCODED_TERM_LENGTH, sliceString } from './utils.js';
+import { encodeTermLength, decodeTermLength, LENGTH_OF_ENCODED_TERM_LENGTH, sliceString, dateTimeToEpochMs } from './utils.js';
 import {Term} from '@rdfjs/types';
 import {separator, tripleTermMarker} from '../utils/constants.js';
 import {encode} from './fpstring.js';
@@ -275,7 +275,7 @@ export const termWriter = {
               break;
             case xsd.dateTime:
               serialized.type = SerializedTermType.DATETIME_LITERAL;
-              numericLiteralWriter.write(term, serialized, prefixes, rangeMode, encode(new Date(term.value).valueOf()));
+              numericLiteralWriter.write(term, serialized, prefixes, rangeMode, encode(dateTimeToEpochMs(term.value)));
               break;
             default:
               serialized.type = SerializedTermType.GENERIC_LITERAL;

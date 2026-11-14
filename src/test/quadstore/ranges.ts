@@ -148,6 +148,70 @@ export const runRangeTests = async (t: TestContext, qcp: QuadstoreContextProvide
 
     });
 
+    await _t.test('Datetime literals without timezone', async (__t) => {
+
+      const xsdDateTime = 'http://www.w3.org/2001/XMLSchema#dateTime';
+
+      // Runs the given function with the host's local timezone set to one far
+      // from UTC, so that interpreting timezone-less values in local time
+      // (rather than UTC) would produce a different ordering of keys.
+      const withNonUtcTimezone = async (fn: () => Promise<void>) => {
+        const tz = process.env.TZ;
+        process.env.TZ = 'Asia/Tokyo';
+        try {
+          await fn();
+        } finally {
+          if (tz === undefined) {
+            delete process.env.TZ;
+          } else {
+            process.env.TZ = tz;
+          }
+        }
+      };
+
+      const setupQuads = async (ctx: any) => {
+        const { dataFactory: df, store } = ctx;
+        const values = [
+          '2019-12-31T23:30:00Z',
+          '2020-01-01T00:00:00',
+          '2020-01-01T00:30:00+00:00',
+          '2020-01-01T02:00:00+01:00',
+        ];
+        const quads = values.map((v, i) => df.quad(
+          df.namedNode(`ex://s${i}`), df.namedNode('ex://p'), df.literal(v, df.namedNode(xsdDateTime)), df.namedNode('ex://g'),
+        ));
+        await store.multiPut(quads);
+        return quads;
+      };
+
+      await __t.test('should interpret timezone-less values as UTC when ordering', async () => {
+        await withNonUtcTimezone(async () => {
+          await using ctx = await qcp.getContext();
+          const { dataFactory: df, store } = ctx;
+          const quads = await setupQuads(ctx);
+          const { items } = await store.get({ predicate: df.namedNode('ex://p') }, { order: ['object'] });
+          equalsQuadArray(items, quads);
+        });
+      });
+
+      await __t.test('should interpret timezone-less values as UTC when matching ranges', async () => {
+        await withNonUtcTimezone(async () => {
+          await using ctx = await qcp.getContext();
+          const { dataFactory: df, store } = ctx;
+          const quads = await setupQuads(ctx);
+          const { items } = await store.get({
+            object: {
+              termType: 'Range',
+              gt: df.literal('2019-12-31T23:45:00Z', df.namedNode(xsdDateTime)),
+              lt: df.literal('2020-01-01T00:15:00', df.namedNode(xsdDateTime)),
+            },
+          });
+          equalsQuadArray(items, quads.slice(1, 2));
+        });
+      });
+
+    });
+
     await _t.test('Terms of mixed types', async (__t) => {
 
       const xsd = 'http://www.w3.org/2001/XMLSchema#';
