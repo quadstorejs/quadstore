@@ -98,7 +98,7 @@ export const encode = (stringOrNumber: string|number): string => {
     mantissa *= -1;
   }
 
-  while (mantissa > 10) {
+  while (mantissa >= 10) {
     mantissa /= 10;
     exponent += 1;
   }

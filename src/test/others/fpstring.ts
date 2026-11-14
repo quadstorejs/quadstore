@@ -10,15 +10,17 @@ export const runFpstringTests = async (t: TestContext) => {
     await _t.test('should produce strings whose lexicographical sorting matches the natural sorting of the original values', async () => {
 
       const values = [
+        -Infinity,
         -123123,
         -123.123,
+        -100,
+        -10,
         -9.1,
         -9,
         -2.123,
         -1.23,
         -1,
-        -0.2123
-        -0.123,
+        -0.3353,
         -0.1,
         0,
         0.1,
@@ -29,13 +31,20 @@ export const runFpstringTests = async (t: TestContext) => {
         2.123,
         9,
         9.1,
+        10,
+        100,
         123.123,
         123123,
+        Infinity
       ];
 
       const shuffled = [
         0,
         123.123,
+        -100,
+        100,
+        10,
+        -10,
         -123.123,
         0.2123,
         -9.1,
@@ -47,13 +56,15 @@ export const runFpstringTests = async (t: TestContext) => {
         -123123,
         -1.23,
         -0.1,
+        Infinity,
+        -Infinity,
         2.123,
         -9,
         -2.123,
         9.1,
         0.1,
         1,
-        1.23
+        1.23,
       ];
 
       const pairs: [number, string][] = shuffled.map(n => [n, encode(n)]);
