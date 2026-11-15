@@ -1,6 +1,16 @@
 
 # CHANGELOG
 
+## 15.5.0
+
+- *[new]* added support for RDF 1.2 triple terms and language-tagged literals
+  with directional base.   
+  (https://github.com/quadstorejs/quadstore/issues/186)   
+  (https://github.com/quadstorejs/quadstore/pull/192)   
+- *[fix]* fixed ordering of floating-point serializations
+  (https://github.com/quadstorejs/quadstore/issues/191)   
+  (https://github.com/quadstorejs/quadstore/pull/193)
+
 ## 15.3.0
 
 - *[new]* added support for (de)serializing NaN literals (`xsd:float`,
