@@ -16,18 +16,14 @@ export class ErrorIterator<T> extends AsyncIterator<T> {
     super();
     this.#err = err;
     this.#threw = false;
-    queueMicrotask(() => {
-      this.readable = true;
-    });
+    this.readable = true;
   }
 
   read(): T | null {
     if (!this.#threw && !this.done) {
       this.#threw = true;
-      queueMicrotask(() => {
-        this.emit('error', this.#err);
-        this.close();
-      });
+      this.emit('error', this.#err);
+      this.close();
     }
     return null;
   }
