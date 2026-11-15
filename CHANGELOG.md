@@ -3,6 +3,10 @@
 
 ## 16.0.0 (unreleased)
 
+Version 16.0.0 mostly focuses on breaking changes related to improving the
+serialization format for more accurate range queries. For more information
+see PR https://github.com/quadstorejs/quadstore/pull/194 .
+
 - **[breaking]** changed the serialization format of keys: each term is now
   prefixed by its type. Keys of all quads change, including those with
   RDF 1.2 triple terms and directional language-tagged literals introduced in
