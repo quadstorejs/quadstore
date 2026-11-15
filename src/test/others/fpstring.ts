@@ -7,18 +7,44 @@ export const runFpstringTests = async (t: TestContext) => {
 
   await t.test('Floating-point serialization', async (_t) => {
 
+    await _t.test('should handle xsd:float INF value', async () => {
+      toStrictlyEqual(encode('INF'), '60000.00000000000000000');
+    });
+
+    await _t.test('should handle xsd:float -INF value', async () => {
+      toStrictlyEqual(encode('-INF'), '00000.00000000000000000');
+    });
+
+    await _t.test('should handle xsd:float NaN value', async () => {
+      toStrictlyEqual(encode('NaN'), '70000.00000000000000000');
+    });
+
+    await _t.test('should handle javascript\'s Infinity', async () => {
+      toStrictlyEqual(encode(Infinity), '60000.00000000000000000');
+    });
+
+    await _t.test('should handle javascript\'s -Infinity', async () => {
+      toStrictlyEqual(encode(-Infinity), '00000.00000000000000000');
+    });
+
+    await _t.test('should handle javascript\'s  NaN', async () => {
+      toStrictlyEqual(encode(NaN), '70000.00000000000000000');
+    });
+
     await _t.test('should produce strings whose lexicographical sorting matches the natural sorting of the original values', async () => {
 
       const values = [
+        -Infinity,
         -123123,
         -123.123,
+        -100,
+        -10,
         -9.1,
         -9,
         -2.123,
         -1.23,
         -1,
-        -0.2123
-        -0.123,
+        -0.3353,
         -0.1,
         0,
         0.1,
@@ -29,15 +55,24 @@ export const runFpstringTests = async (t: TestContext) => {
         2.123,
         9,
         9.1,
+        10,
+        100,
         123.123,
         123123,
+        Infinity,
+        'notanumber',
       ];
 
       const shuffled = [
         0,
         123.123,
+        100,
+        -10,
+        10,
+        -100,
         -123.123,
         0.2123,
+        'notanumber',
         -9.1,
         -1,
         0.123,
@@ -47,16 +82,18 @@ export const runFpstringTests = async (t: TestContext) => {
         -123123,
         -1.23,
         -0.1,
+        Infinity,
+        -Infinity,
         2.123,
         -9,
         -2.123,
         9.1,
         0.1,
         1,
-        1.23
+        1.23,
       ];
 
-      const pairs: [number, string][] = shuffled.map(n => [n, encode(n)]);
+      const pairs: [number | string, string][] = shuffled.map(n => [n, encode(n)]);
       pairs.sort((p1, p2) => p1[1] < p2[1] ? -1 : 1);
 
       pairs.forEach((p, i) => {

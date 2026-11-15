@@ -70,6 +70,20 @@ const NAN = join(7, 0, 0);
 
 export const encode = (stringOrNumber: string|number): string => {
 
+  if (typeof stringOrNumber === 'string') {
+    // Handle special xsd:float values
+    switch (stringOrNumber) {
+      case 'INF':
+        return POS_INF;
+      case '-INF':
+        return NEG_INF;
+      case 'NaN':
+        return NAN;
+      default:
+        // fallback to number encoding
+    }
+  }
+
   let mantissa: number = typeof stringOrNumber !== 'number'
     ? parseFloat(stringOrNumber)
     : stringOrNumber;
@@ -98,7 +112,7 @@ export const encode = (stringOrNumber: string|number): string => {
     mantissa *= -1;
   }
 
-  while (mantissa > 10) {
+  while (mantissa >= 10) {
     mantissa /= 10;
     exponent += 1;
   }

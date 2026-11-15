@@ -26,6 +26,7 @@ const patternLiteralWriter = {
           stringLiteralWriter.write(term, serialized, prefixes);
           return;
         case xsd.integer:
+        case xsd.float:
         case xsd.double:
         case xsd.decimal:
         case xsd.nonPositiveInteger:
