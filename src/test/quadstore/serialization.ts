@@ -61,6 +61,25 @@ export const runSerializationTests = async (t: TestContext, qcp: QuadstoreContex
       });
     });
 
+    await _t.test('Should serialize and deserialize quads with directional language-tagged literals', async () => {
+      await using ctx = await qcp.getContext();
+      const { store } = ctx;
+      const { indexes, prefixes, dataFactory: factory } = store;
+      for (const direction of ['ltr', 'rtl'] as const) {
+        const quad = factory.quad(
+          factory.namedNode('http://ex.com/s'),
+          factory.namedNode('http://ex.com/p'),
+          factory.literal('Hello, world!', { language: 'en-us', direction }),
+          factory.namedNode('http://ex.com/g'),
+        );
+        indexes.forEach((index: InternalIndex) => {
+          const key = twoStepsQuadWriter.ingest(quad, prefixes).write(index.prefix, index.terms);
+          const read = quadReader.read(key, index.prefix.length, index.terms, factory, prefixes);
+          toEqualQuad(read, quad);
+        });
+      }
+    });
+
     await _t.test('Should serialize and deserialize quads with named nodes and language-tagged literals', async () => {
       await using ctx = await qcp.getContext();
       const { store } = ctx;

@@ -70,8 +70,12 @@ export const toEqualTerm = (value: any, expected: Term) => {
   toBeATerm(value);
   expect(value.termType).to.equal(expected.termType);
   expect(value.value).to.equal(expected.value);
+  if (expected.termType === 'Quad') {
+    toEqualQuad(value, expected as Quad);
+  }
   if (expected.termType === 'Literal') {
     expect(value.language).to.equal(expected.language);
+    expect(value.direction || '').to.equal(expected.direction || '');
     if (expected.datatype) {
       toEqualTerm(value.datatype, expected.datatype);
     }
@@ -88,6 +92,9 @@ export const toNotEqualTerm = (value: any, expected: Term): undefined => {
   }
   if (expected.termType === 'Literal') {
     if (expected.language && value.language !== expected.language) {
+      return;
+    }
+    if ((expected.direction || '') !== (value.direction || '')) {
       return;
     }
     if (expected.datatype) {

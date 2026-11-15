@@ -6,7 +6,7 @@ import * as xsd from './xsd.js';
 import { encode } from './fpstring.js';
 import { separator, boundary } from '../utils/constants.js';
 import { blankNodeWriter, defaultGraphWriter, genericLiteralWriter, langStringLiteralWriter, namedNodeWriter,
-         numericLiteralWriter, stringLiteralWriter } from './terms.js';
+         numericLiteralWriter, stringLiteralWriter, tripleTermWriter } from './terms.js';
 
 const serialized: SerializedTerm = {
   type: '',
@@ -122,6 +122,15 @@ export const writePattern = (pattern: Pattern, index: InternalIndex, prefixes: P
         gte = true;
         blankNodeWriter.write(term, serialized, prefixes);
         lt += serialized.value;
+        lte = true;
+        break;
+      case 'Quad':
+        // Triple terms are matched exactly; the writer throws if they contain
+        // variables, mirroring how variables are rejected at the top level.
+        tripleTermWriter.write(term, serialized, prefixes);
+        gt += serialized.value;
+        lt += serialized.value;
+        gte = true;
         lte = true;
         break;
       case 'DefaultGraph':
