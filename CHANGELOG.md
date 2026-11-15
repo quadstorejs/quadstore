@@ -1,7 +1,7 @@
 
 # CHANGELOG
 
-## 16.0.0 (unreleased)
+## 16.0.0
 
 Version 16.0.0 mostly focuses on breaking changes related to improving the
 serialization format for more accurate range queries. For more information
