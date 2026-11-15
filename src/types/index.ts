@@ -130,9 +130,28 @@ export interface LevelQuery<LK, LV> {
   index: InternalIndex;
 }
 
+/**
+ * Single-character codes identifying the type of a serialized term. Each term
+ * within a key is prefixed by its code, so terms of different types never
+ * interleave in the lexicographical ordering of keys. Changing these values
+ * changes the on-disk key format.
+ */
+export enum SerializedTermType {
+  NAMED_NODE = '0',
+  BLANK_NODE = '1',
+  GENERIC_LITERAL = '2',
+  STRING_LITERAL = '3',
+  LANG_STRING_LITERAL = '4',
+  NUMERIC_LITERAL = '5',
+  DEFAULT_GRAPH = '6',
+  DATETIME_LITERAL = '7',
+  DIR_LANG_STRING_LITERAL = '8',
+  TRIPLE_TERM = '9',
+}
+
 export interface SerializedTerm {
   value: string;
-  type: string;
+  type: SerializedTermType;
   lengths: string;
 }
 

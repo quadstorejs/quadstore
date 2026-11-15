@@ -31,3 +31,16 @@ export const encodeQuadLength = (val: number) => {
 export const decodeQuadLength = (str: string) => {
   return parseInt(str, 36);
 };
+
+const DATETIME_TIMEZONE_REGEXP = /(?:Z|[+-]\d{2}:\d{2})$/;
+
+/**
+ * Converts the lexical value of an xsd:dateTime literal to milliseconds
+ * since the epoch. Values that carry no timezone are interpreted as UTC
+ * rather than in the local timezone of the host, which would otherwise make
+ * the serialized form (and thus the ordering of keys) depend on where and
+ * when quads are written.
+ */
+export const dateTimeToEpochMs = (value: string): number => {
+  return Date.parse(DATETIME_TIMEZONE_REGEXP.test(value) ? value : value + 'Z');
+};

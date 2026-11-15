@@ -1,6 +1,7 @@
 
 import type {DataFactory, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term} from '@rdfjs/types';
 import type {Prefixes, Quad, SerializedTerm, TermName} from '../types/index.js';
+import { SerializedTermType } from '../types/index.js';
 
 import { separator } from '../utils/constants.js';
 import { termReader, termWriter } from './terms.js';
@@ -12,10 +13,11 @@ type TwoStepsQuadWriter = Record<TermName, SerializedTerm> & {
 };
 
 export const twoStepsQuadWriter: TwoStepsQuadWriter = {
-  subject: { type: '', value: '', lengths: '' },
-  predicate: { type: '', value: '', lengths: '' },
-  object: { type: '', value: '', lengths: '' },
-  graph: { type: '', value: '', lengths: '' },
+  // Placeholder values, overwritten by every call to ingest().
+  subject: { type: SerializedTermType.NAMED_NODE, value: '', lengths: '' },
+  predicate: { type: SerializedTermType.NAMED_NODE, value: '', lengths: '' },
+  object: { type: SerializedTermType.NAMED_NODE, value: '', lengths: '' },
+  graph: { type: SerializedTermType.NAMED_NODE, value: '', lengths: '' },
   ingest(quad: Quad, prefixes: Prefixes) {
     termWriter.write(quad.subject, this.subject, prefixes);
     termWriter.write(quad.predicate, this.predicate, prefixes);
@@ -28,8 +30,8 @@ export const twoStepsQuadWriter: TwoStepsQuadWriter = {
     let lengths = '';
     for (let t = 0, term; t < termNames.length; t += 1) {
       term = this[termNames[t]];
-      key += term.value + separator;
-      lengths += term.type + term.lengths;
+      key += term.type + term.value + separator;
+      lengths += term.lengths;
     }
     return key + lengths + encodeQuadLength(lengths.length);
   },
