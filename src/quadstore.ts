@@ -135,7 +135,7 @@ export class Quadstore implements Store {
     }
     const pattern: Pattern = { subject, predicate, object, graph };
     // If getStream() rejects, such as when there is no index suitable for the
-    // given pattern, incapsulate the error in an ErrorIterator to make sure it
+    // given pattern, encapsulate the error in an ErrorIterator to make sure it
     // reaches downstream consumers after they have registered their handlers.
     const promised = this.getStream(pattern, opts).then(
       (results) => results.iterator,
