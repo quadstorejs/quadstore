@@ -1,6 +1,24 @@
 
 # CHANGELOG
 
+## 16.0.0 (unreleased)
+
+- **[breaking]** changed the serialization format of keys: each term is now
+  prefixed by its type. Keys of all quads change, including those with
+  RDF 1.2 triple terms and directional language-tagged literals introduced in
+  15.5.0. Databases written by earlier versions cannot be read and must be
+  re-imported.
+- **[breaking]** `xsd:dateTime` literals without a timezone are now
+  interpreted as UTC rather than in the local timezone of the host, so their
+  ordering no longer depends on where quads are written or queried.
+- *[fix]* range queries with an open end no longer return terms of other
+  types (e.g. IRIs, strings, or `xsd:dateTime` literals when ranging over
+  numbers), and closed ranges no longer return non-numeric terms whose values
+  fall between the encoded bounds.
+- *[new]* range queries whose bounds are of incompatible types (e.g. a numeric
+  lower bound and a string upper bound) now throw.
+- *[new]* ordering by a term now groups terms by type.
+
 ## 15.5.0
 
 - *[new]* added support for RDF 1.2 triple terms and language-tagged literals

@@ -6,7 +6,7 @@ import type { BaseQuad, BlankNode, DataFactory, DefaultGraph, Literal, NamedNode
 import * as xsd from './xsd.js';
 import { encodeTermLength, decodeTermLength, LENGTH_OF_ENCODED_TERM_LENGTH, sliceString, dateTimeToEpochMs } from './utils.js';
 import {Term} from '@rdfjs/types';
-import {separator, tripleTermMarker} from '../utils/constants.js';
+import {separator} from '../utils/constants.js';
 import {encode} from './fpstring.js';
 
 export const namedNodeWriter: TermWriter<NamedNode, 'F'> = {
@@ -177,11 +177,14 @@ export const defaultGraphReader: TermReader<DefaultGraph> = {
   },
 };
 
-// RDF 1.2 triple terms are serialized inline: the marker followed by the
-// type-prefixed values of their subject, predicate and object joined by the
-// separator, with the lengths of each nested term appended to the lengths
-// section in the same order. This recurses naturally for nested triple terms,
-// as termReader reads the type of each nested term from the front of its value.
+// RDF 1.2 triple terms are serialized inline: the type-prefixed values of
+// their subject, predicate and object joined by the separator, with the
+// lengths of each nested term appended to the lengths section in the same
+// order. This recurses naturally for nested triple terms, as termReader reads
+// the type of each nested term from the front of its value. As the triple term
+// itself is prefixed by its own type, its key never starts with the key of the
+// term in its subject position (i.e. an object pattern `<x>` never matches an
+// object `<<( <x> <p> <o> )>>` through prefix-based range queries).
 export const tripleTermWriter: TermWriter<BaseQuad, 'F'> = {
   write(node: BaseQuad, serialized: SerializedTerm, prefixes: Prefixes) {
     if (node.graph.termType !== 'DefaultGraph') {
@@ -195,8 +198,7 @@ export const tripleTermWriter: TermWriter<BaseQuad, 'F'> = {
     termWriter.write(node.subject, s, prefixes);
     termWriter.write(node.predicate, p, prefixes);
     termWriter.write(node.object, o, prefixes);
-    serialized.value = tripleTermMarker
-      + s.type + s.value + separator
+    serialized.value = s.type + s.value + separator
       + p.type + p.value + separator
       + o.type + o.value;
     serialized.lengths = s.lengths + p.lengths + o.lengths;
@@ -205,7 +207,6 @@ export const tripleTermWriter: TermWriter<BaseQuad, 'F'> = {
 
 export const tripleTermReader: TermReader<Quad> = {
   read(key: string, state: ReadingState, factory: DataFactory, prefixes: Prefixes): Quad {
-    state.keyOffset += tripleTermMarker.length;
     const subject = termReader.read(key, state, factory, prefixes) as Quad_Subject;
     state.keyOffset += separator.length;
     const predicate = termReader.read(key, state, factory, prefixes) as Quad_Predicate;
