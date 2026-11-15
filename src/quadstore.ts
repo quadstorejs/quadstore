@@ -58,6 +58,7 @@ import { uid } from './utils/uid.js';
 import { getApproximateSize, getStream } from './get/index.js';
 import { Scope } from './scope/index.js';
 import {twoStepsQuadWriter} from './serialization/quads.js';
+import { ErrorIterator } from './utils/erroriterator.js';
 
 export class Quadstore implements Store {
 
@@ -133,7 +134,14 @@ export class Quadstore implements Store {
       return new EmptyIterator();
     }
     const pattern: Pattern = { subject, predicate, object, graph };
-    return wrap(this.getStream(pattern, opts).then(results => results.iterator));
+    // If getStream() rejects, such as when there is no index suitable for the
+    // given pattern, incapsulate the error in an ErrorIterator to make sure it
+    // reaches downstream consumers after they have registered their handlers.
+    const promised = this.getStream(pattern, opts).then(
+      (results) => results.iterator,
+      (err) => new ErrorIterator<Quad>(err),
+    );
+    return wrap(promised);
   }
 
   async countQuads(subject?: Quad_Subject, predicate?: Quad_Predicate, object?: Quad_Object, graph?: Quad_Graph, opts: GetOpts = emptyObject): Promise<number> {

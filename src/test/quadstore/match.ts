@@ -6,6 +6,7 @@ import { arrayToHaveLength, equalsQuadArray } from '../utils/expect.js';
 import { TestContext } from 'node:test';
 import { QuadstoreContextProvider } from '../utils/context.js';
 import { Range } from '../../types/index.js';
+import * as xsd from '../../serialization/xsd.js';
 
 export const runMatchTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
@@ -314,6 +315,32 @@ export const runMatchTests = async (t: TestContext, qcp: QuadstoreContextProvide
         const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
         equalsQuadArray(matchedQuads, [quads[3]]);
       });
+    });
+
+    await _t.test('Should relay errors through the `error` event', async (__t) => {
+
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+
+      // With default indexes, this query pattern throws an error due to the
+      // lack of a suitable index.
+      const literal = dataFactory.literal('NaN', xsd.float);
+      const named = dataFactory.namedNode('http://ex.com/g');
+      const stream = store.match(undefined, undefined, literal, named);
+
+      return new Promise((resolve, reject) => {
+        // Wrap in two setTimeout() calls to ensure the error event is emitted
+        // after handlers are registered by downstream consumers.
+        setTimeout(() => {
+          setTimeout(() => {
+            stream.on('data', () => { });
+            stream.once('error', (err: Error) => {
+              resolve();
+            });
+          });
+        });
+      });
+
     });
 
   });
