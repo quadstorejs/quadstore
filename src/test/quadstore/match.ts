@@ -6,6 +6,7 @@ import { arrayToHaveLength, equalsQuadArray } from '../utils/expect.js';
 import { TestContext } from 'node:test';
 import { QuadstoreContextProvider } from '../utils/context.js';
 import { Range } from '../../types/index.js';
+import * as xsd from '../../serialization/xsd.js';
 
 export const runMatchTests = async (t: TestContext, qcp: QuadstoreContextProvider) => {
 
@@ -314,6 +315,47 @@ export const runMatchTests = async (t: TestContext, qcp: QuadstoreContextProvide
         const matchedQuads = await streamToArray(store.match(undefined, undefined, match, undefined));
         equalsQuadArray(matchedQuads, [quads[3]]);
       });
+    });
+
+    await _t.test('Should relay errors through the `error` event', async (__t) => {
+
+      await using ctx = await qcp.getContext();
+      const { dataFactory, store } = ctx;
+
+      // With default indexes, this query pattern makes getStream() reject
+      // due to the lack of a suitable index.
+      const literal = dataFactory.literal('NaN', xsd.float);
+      const named = dataFactory.namedNode('http://ex.com/g');
+      const stream = store.match(undefined, undefined, literal, named);
+
+      return new Promise<void>((resolve, reject) => {
+        // Fail instead of hanging if the error is never emitted, e.g. if the
+        // default indexes change and this pattern becomes supported.
+        const timeout = setTimeout(() => {
+          reject(new Error('Timed out waiting for the `error` event'));
+        }, 1000);
+        // Wrap in two setTimeout() calls to ensure the error event is emitted
+        // after handlers are registered by downstream consumers.
+        setTimeout(() => {
+          setTimeout(() => {
+            stream.on('data', () => { });
+            stream.once('end', () => {
+              clearTimeout(timeout);
+              reject(new Error('Stream ended without emitting an error'));
+            });
+            stream.once('error', (err: Error) => {
+              clearTimeout(timeout);
+              try {
+                __t.assert.match(err.message, /^No index compatible with pattern/);
+                resolve();
+              } catch (assertionErr) {
+                reject(assertionErr);
+              }
+            });
+          });
+        });
+      });
+
     });
 
   });
